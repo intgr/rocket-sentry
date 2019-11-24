@@ -1,7 +1,7 @@
 Rocket Sentry
 =============
 
-`rocket-sentry` is a simple add-on for the **Rocket** web framework, simplifying
+`rocket-sentry` is a simple add-on for the **Rocket** web framework to simplify
 integration with the **Sentry** application monitoring system.
 
 Or maybe...
