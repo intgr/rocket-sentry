@@ -65,3 +65,13 @@ cargo run --example panic
 
 Then try accessing this URL:
 http://localhost:8012/panic?msg=Is+it+time+to+panic+yet?
+
+Release history
+---------------
+##### 0.2.0 (2020-04-04)
+* Update sentry requirement from 0.12.0 to 0.18.0 (#1)
+* Add CI builds and basic test case (#3, #4)
+* Add documentation for Rust doc (#5)
+
+##### 0.1.0 (2019-11-25)
+* Initial release
