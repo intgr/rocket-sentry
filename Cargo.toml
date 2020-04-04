@@ -5,7 +5,7 @@ edition = "2018"
 
 # Metadata
 authors = ["Marti Raudsepp <marti@juffo.org>"]
-description = "Simple add-on for the Rocket web framework to simplify integration with the Sentry application monitoring system."
+description = "Simplifies integration between the Rocket web framework and Sentry application monitoring system."
 homepage = "https://github.com/intgr/rocket-sentry"
 repository = "https://github.com/intgr/rocket-sentry"
 readme = "README.md"
