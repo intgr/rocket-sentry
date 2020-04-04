@@ -51,8 +51,8 @@ sentry_dsn = "https://057006d7dfe5fff0fbed461cfca5f757@sentry.io/1111111"
 Testing
 -------
 
-The functionality can be tested with the "example" sub-project. Just change the
-`example/Rocket.toml` file and run it...
+The functionality can be tested with the `examples/panic.rs` example. Just
+change the `Rocket.toml` file and run it...
 
 ```shell script
 rustup override set nightly
