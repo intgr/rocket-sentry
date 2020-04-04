@@ -1,6 +1,10 @@
 Rocket Sentry
 =============
 
+[![Crates.io version](https://img.shields.io/crates/v/rocket-sentry.svg)](https://crates.io/crates/rocket-sentry)
+[![Documentation](https://docs.rs/rocket-sentry/badge.svg)](https://docs.rs/rocket-sentry/)
+[![Tests status](https://github.com/intgr/rocket-sentry/workflows/Tests/badge.svg?branch=master)](https://github.com/intgr/rocket-sentry/actions?query=workflow:Tests)
+
 `rocket-sentry` is a simple add-on for the **Rocket** web framework to simplify
 integration with the **Sentry** application monitoring system.
 
@@ -22,7 +26,7 @@ environment variable `ROCKET_SENTRY_DSN`.
 Usage
 -----
 
-To use this, add the dependency to your `Cargo.toml`, and add the following
+To use this, add the dependency to your `Cargo.toml`, and add the fairing
 to your code:
 
 ```rust
@@ -31,7 +35,7 @@ use rocket_sentry::RocketSentry;
 fn main() {
     rocket::ignite()
         .attach(RocketSentry::fairing())
-        // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   add this line
         .launch();
 }
 ```
