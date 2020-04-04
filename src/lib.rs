@@ -57,12 +57,3 @@ impl Fairing for RocketSentry {
         Ok(rocket)
     }
 }
-
-/* TODO: write tests
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-    }
-}
-*/
