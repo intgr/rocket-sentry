@@ -1,0 +1,7 @@
+/target
+_local
+.idea
+.git
+.github
+Cargo.lock
+varia/Dockerfile.tests
