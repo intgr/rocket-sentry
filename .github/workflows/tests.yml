@@ -1,0 +1,24 @@
+name: Tests
+on:
+  push:
+    branches: [master]
+  pull_request:
+  schedule:
+    # 16:24 UTC on Tuesdays
+    - cron: "24 16 * * tue"
+  repository_dispatch:
+    types: [tests]
+
+env:
+  DOCKER_BUILDKIT: 1
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Build
+        run: docker build . --pull -f varia/Dockerfile.tests --tag=rocket-sentry-build
+      - name: Clippy lints
+        run: docker run --rm rocket-sentry-build cargo clippy --color=always
+      - name: rustfmt
+        run: docker run --rm rocket-sentry-build rustfmt --color=always --check {src,tests,examples}/**.rs

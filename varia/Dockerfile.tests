@@ -1,0 +1,20 @@
+# This Dockerfile is mostly for CI, see .github/workflows/tests.yml
+# Base image has the latest "nightly" build that has working rustfmt & clippy
+FROM guangie88/rustfmt-clippy:nightly AS rocket-sentry-build
+
+WORKDIR /root/build
+
+# Make warnings fatal
+ENV RUSTFLAGS="-D warnings"
+
+# Build Cargo dependencies for cache
+COPY Cargo.toml ./
+RUN mkdir src/ && \
+	echo "pub fn main() {println!(\"dummy function\")}" > src/lib.rs && \
+	cargo build --lib --tests && \
+	rm -rdv target/*/deps/rocket_sentry-* \
+	        target/*/.fingerprint/rocket-sentry-*
+
+# Do the actual build
+COPY . .
+RUN cargo build --lib --tests --examples
