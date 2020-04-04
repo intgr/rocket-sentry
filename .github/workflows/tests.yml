@@ -21,4 +21,4 @@ jobs:
       - name: Clippy lints
         run: docker run --rm rocket-sentry-build cargo clippy --color=always
       - name: rustfmt
-        run: docker run --rm rocket-sentry-build rustfmt --color=always --check {src,tests,examples}/**.rs
+        run: docker run --rm rocket-sentry-build rustfmt --color=always --check {src,examples}/**.rs
