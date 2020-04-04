@@ -51,14 +51,13 @@ sentry_dsn = "https://057006d7dfe5fff0fbed461cfca5f757@sentry.io/1111111"
 Testing
 -------
 
-The functionality can be tested with the "example" sub-project. Just change the
-`example/Rocket.toml` file and run it...
+The functionality can be tested with the `examples/panic.rs` example. Just
+change the `Rocket.toml` file and run it...
 
 ```shell script
-cd example
 rustup override set nightly
-cargo run
+cargo run --example panic
 ```
 
 Then try accessing this URL:
-http://localhost:8012/panic?msg=Everything%20is%20on%20fire%21
+http://localhost:8012/panic?msg=Is+it+time+to+panic+yet?
