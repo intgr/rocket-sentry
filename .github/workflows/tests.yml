@@ -6,6 +6,7 @@ on:
   schedule:
     # 16:24 UTC on Tuesdays
     - cron: "24 16 * * tue"
+  workflow_dispatch:
   repository_dispatch:
     types: [tests]
 
@@ -23,4 +24,4 @@ jobs:
       - name: Clippy lints
         run: docker run --rm rocket-sentry-build cargo clippy --color=always
       - name: rustfmt
-        run: docker run --rm rocket-sentry-build rustfmt --color=always --check {src,tests,examples}/**.rs
+        run: docker run --rm rocket-sentry-build cargo fmt -- --color=always --check
