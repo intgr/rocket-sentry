@@ -39,7 +39,7 @@ use std::sync::Mutex;
 
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::Rocket;
-use sentry::internals::ClientInitGuard;
+use sentry::ClientInitGuard;
 
 pub struct RocketSentry {
     guard: Mutex<Option<ClientInitGuard>>,
@@ -60,15 +60,10 @@ impl RocketSentry {
             let mut self_guard = self.guard.lock().unwrap();
             *self_guard = Some(guard);
 
-            self.configure();
             println!("Sentry enabled.");
         } else {
             println!("Sentry did not initialize.");
         }
-    }
-
-    fn configure(&self) {
-        sentry::integrations::panic::register_panic_handler();
     }
 }
 
