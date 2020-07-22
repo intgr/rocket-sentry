@@ -3,7 +3,6 @@
 FROM guangie88/rustfmt-clippy:nightly AS rocket-sentry-build
 
 WORKDIR /root/build
-
 # Make warnings fatal
 ENV RUSTFLAGS="-D warnings"
 
@@ -11,10 +10,10 @@ ENV RUSTFLAGS="-D warnings"
 COPY Cargo.toml ./
 RUN mkdir src/ && \
 	echo "pub fn main() {println!(\"dummy function\")}" > src/lib.rs && \
-	cargo build --lib --tests && \
+	cargo build --lib --tests --examples --color=always && \
 	rm -rdv target/*/deps/rocket_sentry-* \
 	        target/*/.fingerprint/rocket-sentry-*
 
 # Do the actual build
 COPY . .
-RUN cargo build --lib --tests --examples
+RUN cargo build --lib --tests --examples --color=always
