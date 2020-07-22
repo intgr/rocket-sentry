@@ -1,6 +1,6 @@
 [package]
 name = "rocket-sentry"
-version = "0.2.0"
+version = "0.3.0-beta.0"
 edition = "2018"
 
 # Metadata
@@ -16,5 +16,5 @@ license = "MIT"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-sentry = "0.18.0"
+sentry = "0.19.0"
 rocket = { version = "0.4.2", default-features = false }
