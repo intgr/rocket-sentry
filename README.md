@@ -68,6 +68,10 @@ http://localhost:8012/panic?msg=Is+it+time+to+panic+yet?
 
 Release history
 ---------------
+##### 0.4.0 (2020-08-16)
+* Use log crate instead of println (#11).
+  Thanks to Afonso Bordado, @afonso360
+
 ##### 0.3.0 (2020-07-22)
 * Update sentry requirement from 0.18.0 to 0.19.0 (#9)
   * Sentry now automatically installs panic handler, dropped from rocket-sentry.
