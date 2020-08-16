@@ -35,7 +35,8 @@
 //! sentry_dsn = "https://057006d7dfe5fff0fbed461cfca5f757@sentry.io/1111111"
 //! ```
 //!
-#[macro_use] extern crate log;
+#[macro_use]
+extern crate log;
 
 use std::sync::Mutex;
 
