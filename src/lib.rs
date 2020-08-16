@@ -35,6 +35,8 @@
 //! sentry_dsn = "https://057006d7dfe5fff0fbed461cfca5f757@sentry.io/1111111"
 //! ```
 //!
+#[macro_use] extern crate log;
+
 use std::sync::Mutex;
 
 use rocket::fairing::{Fairing, Info, Kind};
@@ -60,9 +62,9 @@ impl RocketSentry {
             let mut self_guard = self.guard.lock().unwrap();
             *self_guard = Some(guard);
 
-            println!("Sentry enabled.");
+            info!("Sentry enabled.");
         } else {
-            println!("Sentry did not initialize.");
+            error!("Sentry did not initialize.");
         }
     }
 }
@@ -79,12 +81,12 @@ impl Fairing for RocketSentry {
     fn on_attach(&self, rocket: Rocket) -> Result<Rocket, Rocket> {
         match rocket.config().get_str("sentry_dsn") {
             Ok("") => {
-                println!("Sentry disabled.");
+                info!("Sentry disabled.");
             }
             Ok(dsn) => {
                 self.init(dsn);
             }
-            Err(err) => println!("Sentry disabled: {}", err),
+            Err(err) => error!("Sentry disabled: {}", err),
         }
         Ok(rocket)
     }
