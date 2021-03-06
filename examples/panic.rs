@@ -7,8 +7,7 @@ use rocket_sentry::RocketSentry;
 
 #[get("/panic?<msg>")]
 fn panic(msg: Option<String>) -> String {
-    let msg = msg.unwrap_or("You asked for it!".to_string());
-    panic!(msg);
+    panic!("{}", msg.unwrap_or("You asked for it!".to_string()));
 }
 
 fn main() {
