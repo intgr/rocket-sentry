@@ -68,6 +68,9 @@ http://localhost:8012/panic?msg=Is+it+time+to+panic+yet?
 
 Release history
 ---------------
+##### 0.7.0 (2021-07-13)
+* Update sentry requirement from 0.22 to 0.23 (#20)
+
 ##### 0.6.0 (2021-01-26)
 * Update sentry requirement from 0.20 to 0.22 (#16)
 
