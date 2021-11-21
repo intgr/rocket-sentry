@@ -32,11 +32,11 @@ to your code:
 ```rust
 use rocket_sentry::RocketSentry;
 
-fn main() {
-    rocket::ignite()
+#[launch]
+fn rocket() -> _ {
+    rocket::build()
         .attach(RocketSentry::fairing())
         // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   add this line
-        .launch();
 }
 ```
 
@@ -44,11 +44,9 @@ Then, the Sentry integration can be enabled by adding a `sentry_dsn=` value to
 the `Rocket.toml` file, for example:
 
 ```toml
-[development]
+[debug]
 sentry_dsn = ""  # Disabled
-[staging]
-sentry_dsn = "https://057006d7dfe5fff0fbed461cfca5f757@sentry.io/1111111"
-[production]
+[release]
 sentry_dsn = "https://057006d7dfe5fff0fbed461cfca5f757@sentry.io/1111111"
 ```
 
@@ -59,7 +57,6 @@ The functionality can be tested with the `examples/panic.rs` example. Just
 change the `Rocket.toml` file and run it...
 
 ```shell script
-rustup override set nightly
 cargo run --example panic
 ```
 
