@@ -1,12 +1,18 @@
-use rocket_sentry::RocketSentry;
 use sentry::Hub;
 
+use rocket_sentry::RocketSentry;
+
 /// Smoke test: check that sentry gets initialized by the fairing.
-#[test]
-fn fairing_init() {
+#[rocket::async_test]
+async fn fairing_init() {
     let hub = Hub::main();
     assert!(hub.client().is_none());
 
-    rocket::ignite().attach(RocketSentry::fairing());
+    let _rocket = rocket::build()
+        .attach(RocketSentry::fairing())
+        .ignite()
+        .await
+        .expect("Rocket failed to ignite");
+
     assert!(hub.client().is_some());
 }

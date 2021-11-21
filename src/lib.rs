@@ -13,25 +13,27 @@
 //! =============
 //!
 //! ```no_run
+//! # #[macro_use]
+//! # extern crate rocket;
 //! use rocket_sentry::RocketSentry;
 //!
-//! fn main() {
-//!     rocket::ignite()
+//! # fn main() {
+//! #[launch]
+//! fn rocket() -> _ {
+//!     rocket::build()
 //!         .attach(RocketSentry::fairing())
 //!         // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   add this line
-//!         .launch();
 //! }
+//! # }
 //! ```
 //!
 //! Then, the Sentry integration can be enabled by adding a `sentry_dsn=` value to
 //! the `Rocket.toml` file, for example:
 //!
 //! ```toml
-//! [development]
+//! [debug]
 //! sentry_dsn = ""  # Disabled
-//! [staging]
-//! sentry_dsn = "https://057006d7dfe5fff0fbed461cfca5f757@sentry.io/1111111"
-//! [production]
+//! [release]
 //! sentry_dsn = "https://057006d7dfe5fff0fbed461cfca5f757@sentry.io/1111111"
 //! ```
 //!
@@ -41,11 +43,17 @@ extern crate log;
 use std::sync::Mutex;
 
 use rocket::fairing::{Fairing, Info, Kind};
-use rocket::Rocket;
+use rocket::serde::Deserialize;
+use rocket::{fairing, Build, Rocket};
 use sentry::ClientInitGuard;
 
 pub struct RocketSentry {
     guard: Mutex<Option<ClientInitGuard>>,
+}
+
+#[derive(Deserialize)]
+struct Config {
+    sentry_dsn: String,
 }
 
 impl RocketSentry {
@@ -70,24 +78,28 @@ impl RocketSentry {
     }
 }
 
+#[rocket::async_trait]
 impl Fairing for RocketSentry {
     fn info(&self) -> Info {
         Info {
             name: "rocket-sentry",
-            // Kind::Response is necessary, otherwise Rocket dealloc's our SentryGuard reference.
-            kind: Kind::Attach | Kind::Response,
+            kind: Kind::Ignite | Kind::Singleton,
         }
     }
 
-    fn on_attach(&self, rocket: Rocket) -> Result<Rocket, Rocket> {
-        match rocket.config().get_str("sentry_dsn") {
-            Ok("") => {
-                info!("Sentry disabled.");
+    async fn on_ignite(&self, rocket: Rocket<Build>) -> fairing::Result {
+        let figment = rocket.figment();
+
+        let config: figment::error::Result<Config> = figment.extract();
+        match config {
+            Ok(config) => {
+                if config.sentry_dsn.is_empty() {
+                    info!("Sentry disabled.");
+                } else {
+                    self.init(&config.sentry_dsn);
+                }
             }
-            Ok(dsn) => {
-                self.init(dsn);
-            }
-            Err(err) => error!("Sentry disabled: {}", err),
+            Err(err) => error!("Sentry not configured: {}", err),
         }
         Ok(rocket)
     }

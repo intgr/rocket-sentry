@@ -1,4 +1,4 @@
-# Rocket.toml file for examples/*
+# Rocket.toml file for tests/* and examples/*
 # Run: cargo run --example panic
 [global]
 sentry_dsn = "https://6b39979e27304cc3aa774f5b6811ce7d@sentry.io/1832690"
