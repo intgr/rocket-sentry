@@ -65,6 +65,13 @@ http://localhost:8012/panic?msg=Is+it+time+to+panic+yet?
 
 Release history
 ---------------
+##### 0.8.0 (2021-11-22)
+* **Breaking change:** Update to Rocket version 0.5-rc
+  * To continue using Rocket 0.4.x, stay with rocket-sentry 0.7.0
+  * Now using figment and serde for configuration (as required by Rocket)
+  * The fairing no longer needs to have `Response` kind
+  * RocketSentry now uses fairing kind `Singleton`
+
 ##### 0.7.0 (2021-07-13)
 * Update sentry requirement from 0.22 to 0.23 (#20)
 
