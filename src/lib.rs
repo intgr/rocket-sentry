@@ -83,7 +83,7 @@ impl Fairing for RocketSentry {
     fn info(&self) -> Info {
         Info {
             name: "rocket-sentry",
-            kind: Kind::Ignite,
+            kind: Kind::Ignite | Kind::Singleton,
         }
     }
 
