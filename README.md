@@ -18,7 +18,9 @@ Or maybe...
 Features
 --------
 
-Currently, `rocket-sentry` only enables the Rust panic handler.
+Currently `rocket-sentry` is very basic, it only enables the Rust panic handler.
+There is no integration with the Rocket request lifecycle.
+Pull requests welcome!
 
 `rocket-sentry` can be configured via `Rocket.toml` (`sentry_dsn=`) or
 environment variable `ROCKET_SENTRY_DSN`.
@@ -65,6 +67,9 @@ http://localhost:8012/panic?msg=Is+it+time+to+panic+yet?
 
 Release history
 ---------------
+##### 0.9.0 (2022-01-22)
+* Update Rust crate sentry to 0.24.1 (#28) & patch updates
+
 ##### 0.8.0 (2021-11-22)
 * **Breaking change:** Update to Rocket version 0.5-rc
   * To continue using Rocket 0.4.x, stay with rocket-sentry 0.7.0
