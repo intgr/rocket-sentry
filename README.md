@@ -67,6 +67,9 @@ http://localhost:8012/panic?msg=Is+it+time+to+panic+yet?
 
 Release history
 ---------------
+##### 0.10.0 (2022-03-26)
+* Update Rust crate sentry to 0.25.0 (#31) & patch updates
+
 ##### 0.9.0 (2022-01-22)
 * Update Rust crate sentry to 0.24.1 (#28) & patch updates
 
