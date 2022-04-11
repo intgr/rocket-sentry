@@ -64,7 +64,10 @@ impl RocketSentry {
     }
 
     fn init(&self, dsn: &str) {
-        let guard = sentry::init(dsn);
+        let guard = sentry::init((dsn, sentry::ClientOptions {
+            release: sentry::release_name!(),
+            ..Default::default()
+        }));
 
         if guard.is_enabled() {
             // Tuck the ClientInitGuard in the fairing, so it lives as long as the server.
