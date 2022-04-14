@@ -46,13 +46,15 @@ use rocket::fairing::{Fairing, Info, Kind};
 use rocket::serde::Deserialize;
 use rocket::{fairing, Build, Rocket};
 use sentry::ClientInitGuard;
+use rocket::Config;
+
 
 pub struct RocketSentry {
     guard: Mutex<Option<ClientInitGuard>>,
 }
 
 #[derive(Deserialize)]
-struct Config {
+struct SentryConfig {
     sentry_dsn: String,
 }
 
@@ -66,6 +68,7 @@ impl RocketSentry {
     fn init(&self, dsn: &str) {
         let guard = sentry::init((dsn, sentry::ClientOptions {
             release: sentry::release_name!(),
+            environment: Some(String::from(Config::DEFAULT_PROFILE).into()),
             ..Default::default()
         }));
 
@@ -93,7 +96,7 @@ impl Fairing for RocketSentry {
     async fn on_ignite(&self, rocket: Rocket<Build>) -> fairing::Result {
         let figment = rocket.figment();
 
-        let config: figment::error::Result<Config> = figment.extract();
+        let config: figment::error::Result<SentryConfig> = figment.extract();
         match config {
             Ok(config) => {
                 if config.sentry_dsn.is_empty() {
