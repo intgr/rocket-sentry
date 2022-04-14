@@ -44,10 +44,9 @@ use std::sync::Mutex;
 
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::serde::Deserialize;
+use rocket::Config;
 use rocket::{fairing, Build, Rocket};
 use sentry::ClientInitGuard;
-use rocket::Config;
-
 
 pub struct RocketSentry {
     guard: Mutex<Option<ClientInitGuard>>,
@@ -66,11 +65,14 @@ impl RocketSentry {
     }
 
     fn init(&self, dsn: &str) {
-        let guard = sentry::init((dsn, sentry::ClientOptions {
-            release: sentry::release_name!(),
-            environment: Some(String::from(Config::DEFAULT_PROFILE).into()),
-            ..Default::default()
-        }));
+        let guard = sentry::init((
+            dsn,
+            sentry::ClientOptions {
+                release: sentry::release_name!(),
+                environment: Some(String::from(Config::DEFAULT_PROFILE).into()),
+                ..Default::default()
+            },
+        ));
 
         if guard.is_enabled() {
             // Tuck the ClientInitGuard in the fairing, so it lives as long as the server.
