@@ -1,7 +1,7 @@
 [package]
 name = "rocket-sentry"
 version = "0.10.0"
-edition = "2018"
+edition = "2021"
 
 # Metadata
 authors = ["Marti Raudsepp <marti@juffo.org>"]
