@@ -1,6 +1,6 @@
 # This Dockerfile is mostly for CI, see .github/workflows/tests.yml
-# Base image has the latest "nightly" build that has working rustfmt & clippy
-FROM guangie88/rustfmt-clippy:nightly AS rocket-sentry-build
+# Base image has the latest "nightly" build along with rustfmt & clippy
+FROM rustlang/rust:nightly AS rocket-sentry-build
 
 WORKDIR /root/build
 # Make warnings fatal
