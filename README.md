@@ -67,11 +67,18 @@ http://localhost:8012/panic?msg=Is+it+time+to+panic+yet?
 
 Release history
 ---------------
+##### 0.11.0 (2022-05-22)
+* Update Rust crate sentry to 0.26.0 (#42)
+* Update Rust crate rocket to 0.5.0-rc.2 (#39)
+* Update to use Rust 2021 edition (#41)
+* Fixed CI (#40)
+* Patch version updates
+
 ##### 0.10.0 (2022-03-26)
-* Update Rust crate sentry to 0.25.0 (#31) & patch updates
+* Update Rust crate sentry to 0.25.0 (#31) & patch version updates
 
 ##### 0.9.0 (2022-01-22)
-* Update Rust crate sentry to 0.24.1 (#28) & patch updates
+* Update Rust crate sentry to 0.24.1 (#28) & patch version updates
 
 ##### 0.8.0 (2021-11-22)
 * **Breaking change:** Update to Rocket version 0.5-rc
