@@ -20,4 +20,4 @@ sentry = "0.26.0"
 rocket = { version = "0.5.0-rc.2", default-features = false }
 log = "0.4.17"
 serde = "1.0.137"
-figment = "0.10.6"
+figment = "0.10.7"
