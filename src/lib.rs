@@ -44,6 +44,7 @@ use std::sync::Mutex;
 
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::serde::Deserialize;
+use rocket::Config;
 use rocket::{fairing, Build, Rocket};
 use sentry::ClientInitGuard;
 
@@ -52,7 +53,7 @@ pub struct RocketSentry {
 }
 
 #[derive(Deserialize)]
-struct Config {
+struct SentryConfig {
     sentry_dsn: String,
 }
 
@@ -64,7 +65,14 @@ impl RocketSentry {
     }
 
     fn init(&self, dsn: &str) {
-        let guard = sentry::init(dsn);
+        let guard = sentry::init((
+            dsn,
+            sentry::ClientOptions {
+                release: sentry::release_name!(),
+                environment: Some(String::from(Config::DEFAULT_PROFILE).into()),
+                ..Default::default()
+            },
+        ));
 
         if guard.is_enabled() {
             // Tuck the ClientInitGuard in the fairing, so it lives as long as the server.
@@ -90,7 +98,7 @@ impl Fairing for RocketSentry {
     async fn on_ignite(&self, rocket: Rocket<Build>) -> fairing::Result {
         let figment = rocket.figment();
 
-        let config: figment::error::Result<Config> = figment.extract();
+        let config: figment::error::Result<SentryConfig> = figment.extract();
         match config {
             Ok(config) => {
                 if config.sentry_dsn.is_empty() {
