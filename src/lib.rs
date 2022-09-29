@@ -40,12 +40,12 @@
 #[macro_use]
 extern crate log;
 
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::serde::Deserialize;
 use rocket::{fairing, Build, Rocket};
-use sentry::ClientInitGuard;
+use sentry::{ClientInitGuard, ClientOptions};
 
 pub struct RocketSentry {
     guard: Mutex<Option<ClientInitGuard>>,
@@ -64,7 +64,16 @@ impl RocketSentry {
     }
 
     fn init(&self, dsn: &str) {
-        let guard = sentry::init(dsn);
+        let guard = sentry::init((
+            dsn,
+            ClientOptions {
+                before_send: Some(Arc::new(|event| {
+                    info!("Sending event to Sentry: {}", event.event_id);
+                    Some(event)
+                })),
+                ..Default::default()
+            },
+        ));
 
         if guard.is_enabled() {
             // Tuck the ClientInitGuard in the fairing, so it lives as long as the server.
