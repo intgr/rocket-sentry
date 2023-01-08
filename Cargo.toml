@@ -1,7 +1,8 @@
 [package]
 name = "rocket-sentry"
-version = "0.14.0"
+version = "0.15.0"
 edition = "2021"
+rust-version = "1.64.0"
 
 # Metadata
 authors = ["Marti Raudsepp <marti@juffo.org>"]
