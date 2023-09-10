@@ -135,6 +135,6 @@ impl Fairing for RocketSentry {
         let request_transaction = local_cache_once!(request, Self::build_transaction);
         let ongoing_transaction: &Transaction = request.local_cache(request_transaction);
         // TODO ongoing_transaction.set_status()
-        ongoing_transaction.clone().finish();  // TODO avoid the clone
+        ongoing_transaction.clone().finish();
     }
 }
