@@ -44,8 +44,9 @@ use std::sync::{Arc, Mutex};
 
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::serde::Deserialize;
-use rocket::{fairing, Build, Rocket};
-use sentry::{ClientInitGuard, ClientOptions};
+use rocket::{fairing, Build, Rocket, Request, Data, Response};
+use rocket::request::local_cache_once;
+use sentry::{ClientInitGuard, ClientOptions, Transaction};
 
 pub struct RocketSentry {
     guard: Mutex<Option<ClientInitGuard>>,
@@ -71,6 +72,7 @@ impl RocketSentry {
                     info!("Sending event to Sentry: {}", event.event_id);
                     Some(event)
                 })),
+                traces_sample_rate: 1.0,  // TODO set it via config and default to 0
                 ..Default::default()
             },
         ));
@@ -85,6 +87,14 @@ impl RocketSentry {
             error!("Sentry did not initialize.");
         }
     }
+
+    fn build_transaction() -> Transaction {
+        let tx_ctx = sentry::TransactionContext::new(
+            "splitted4",  // TODO buil the name based on the request path and method
+            "http.server",
+        );
+        sentry::start_transaction(tx_ctx)
+    }
 }
 
 #[rocket::async_trait]
@@ -92,7 +102,7 @@ impl Fairing for RocketSentry {
     fn info(&self) -> Info {
         Info {
             name: "rocket-sentry",
-            kind: Kind::Ignite | Kind::Singleton,
+            kind: Kind::Ignite | Kind::Singleton | Kind::Request | Kind::Response,
         }
     }
 
@@ -111,5 +121,20 @@ impl Fairing for RocketSentry {
             Err(err) => error!("Sentry not configured: {}", err),
         }
         Ok(rocket)
+    }
+
+    async fn on_request(&self, request: &mut Request<'_>, _: &mut Data<'_>) {
+        // let client = self.guard.get_mut().expect("Sentry set").unwrap();  // TODO local_cache should store a Hub rather than a transaction
+        // let x = Hub::new(self.client);
+        // x.start_transaction(tx_ctx);
+        let request_transaction = local_cache_once!(request, Self::build_transaction);
+        request.local_cache(request_transaction);
+    }
+
+    async fn on_response<'r>(&self, request: &'r Request<'_>, _: &mut Response<'r>) {
+        let request_transaction = local_cache_once!(request, Self::build_transaction);
+        let ongoing_transaction: &Transaction = request.local_cache(request_transaction);
+        // TODO ongoing_transaction.set_status()
+        ongoing_transaction.clone().finish();  // TODO avoid the clone
     }
 }
