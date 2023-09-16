@@ -90,17 +90,17 @@ impl RocketSentry {
         }
     }
 
-    fn build_transaction(name: &String) -> Transaction {
+    fn build_transaction(name: &str) -> Transaction {
         let transaction_context = sentry::TransactionContext::new(
-            name.as_str(),
+            name,
             TRANSACTION_OPERATION_NAME,
         );
         sentry::start_transaction(transaction_context)
     }
 
     fn invalid_transaction() -> Transaction {
-        let name = String::from("INVALID TRANSACTION");
-        Self::build_transaction(&name)
+        let name = "INVALID TRANSACTION";
+        Self::build_transaction(name)
     }
 }
 
