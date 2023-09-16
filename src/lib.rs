@@ -48,6 +48,8 @@ use rocket::{fairing, Build, Rocket, Request, Data, Response};
 use rocket::request::local_cache_once;
 use sentry::{ClientInitGuard, ClientOptions, Transaction};
 
+const TRANSACTION_OPERATION_NAME: &str = "http.server";
+
 pub struct RocketSentry {
     guard: Mutex<Option<ClientInitGuard>>,
 }
@@ -88,13 +90,24 @@ impl RocketSentry {
         }
     }
 
-    fn build_transaction() -> Transaction {
-        let tx_ctx = sentry::TransactionContext::new(
-            "splitted4",  // TODO buil the name based on the request path and method
-            "http.server",
+    fn build_transaction(name: &String) -> Transaction {
+        let transaction_context = sentry::TransactionContext::new(
+            name.as_str(),
+            TRANSACTION_OPERATION_NAME,
         );
-        sentry::start_transaction(tx_ctx)
+        sentry::start_transaction(transaction_context)
     }
+
+    fn invalid_transaction() -> Transaction {
+        let name = String::from("INVALID TRANSACTION");
+        Self::build_transaction(&name)
+    }
+}
+
+pub fn request_to_transaction_name(request: &Request) -> String {
+    let method = request.method();
+    let path = request.uri().path();
+    format!("{method} {path}")
 }
 
 #[rocket::async_trait]
@@ -124,17 +137,17 @@ impl Fairing for RocketSentry {
     }
 
     async fn on_request(&self, request: &mut Request<'_>, _: &mut Data<'_>) {
-        // let client = self.guard.get_mut().expect("Sentry set").unwrap();  // TODO local_cache should store a Hub rather than a transaction
-        // let x = Hub::new(self.client);
-        // x.start_transaction(tx_ctx);
-        let request_transaction = local_cache_once!(request, Self::build_transaction);
+        let name = request_to_transaction_name(request);
+        let build_transaction = move || Self::build_transaction(&name);
+        let request_transaction = local_cache_once!(request, build_transaction);
         request.local_cache(request_transaction);
     }
 
-    async fn on_response<'r>(&self, request: &'r Request<'_>, _: &mut Response<'r>) {
-        let request_transaction = local_cache_once!(request, Self::build_transaction);
+    async fn on_response<'r>(&self, request: &'r Request<'_>, response: &mut Response<'r>) {
+        // We take the transaction set in the on_request callback
+        let request_transaction = local_cache_once!(request, Self::invalid_transaction);
         let ongoing_transaction: &Transaction = request.local_cache(request_transaction);
-        // TODO ongoing_transaction.set_status()
+        // TODO ongoing_transaction.set_status(response.status());
         ongoing_transaction.clone().finish();
     }
 }

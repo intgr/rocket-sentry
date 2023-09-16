@@ -8,15 +8,22 @@ use rocket::{Build, Rocket};
 use rocket_sentry::RocketSentry;
 
 #[get("/performance")]
-fn panic() -> String {
+fn performance() -> String {
     let duration = Duration::from_millis(500);
     thread::sleep(duration);
     return format!("Waited {duration:?}");
+}
+
+#[get("/performance/<id>")]
+fn performance_with_id(id: u8) -> String {
+    let duration = Duration::from_millis(500);
+    thread::sleep(duration);
+    return format!("Waited {duration:?} for id {id}");
 }
 
 #[launch]
 fn rocket() -> Rocket<Build> {
     rocket::build()
         .attach(RocketSentry::fairing())
-        .mount("/", routes![panic])
+        .mount("/", routes![performance, performance_with_id])
 }
