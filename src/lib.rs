@@ -104,12 +104,6 @@ impl RocketSentry {
     }
 }
 
-pub fn request_to_transaction_name(request: &Request) -> String {
-    let method = request.method();
-    let path = request.uri().path();
-    format!("{method} {path}")
-}
-
 #[rocket::async_trait]
 impl Fairing for RocketSentry {
     fn info(&self) -> Info {
@@ -149,5 +143,51 @@ impl Fairing for RocketSentry {
         let ongoing_transaction: &Transaction = request.local_cache(request_transaction);
         // TODO ongoing_transaction.set_status(response.status());
         ongoing_transaction.clone().finish();
+    }
+}
+
+fn request_to_transaction_name(request: &Request) -> String {
+    let method = request.method();
+    let path = request.uri().path();
+    format!("{method} {path}")
+}
+
+#[cfg(test)]
+mod tests {
+    use rocket::local::asynchronous::Client;
+    use crate::request_to_transaction_name;
+
+    #[rocket::async_test]
+    async fn request_to_sentry_transaction_name_get_no_path() {
+        let rocket = rocket::build();
+        let client = Client::tracked(rocket).await.unwrap();
+        let request = client.get("/");
+
+        let transaction_name = request_to_transaction_name(request.inner());
+
+        assert_eq!(transaction_name, "GET /");
+    }
+
+    #[rocket::async_test]
+    async fn request_to_sentry_transaction_name_get_some_path() {
+        let rocket = rocket::build();
+        let client = Client::tracked(rocket).await.unwrap();
+        let request = client.get("/some/path");
+
+        let transaction_name = request_to_transaction_name(request.inner());
+
+        assert_eq!(transaction_name, "GET /some/path");
+    }
+
+    #[rocket::async_test]
+    async fn request_to_sentry_transaction_name_post_path_with_variables() {
+        let rocket = rocket::build();
+        let client = Client::tracked(rocket).await.unwrap();
+        let request = client.post("/users/6");
+
+        let transaction_name = request_to_transaction_name(request.inner());
+
+        // Ideally, we should just returns /users/<id> as configured in the routes
+        assert_eq!(transaction_name, "POST /users/6");
     }
 }
