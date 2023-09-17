@@ -15,8 +15,9 @@ fn performance() -> String {
 }
 
 #[get("/performance/<id>")]
-fn performance_with_id(id: u8) -> String {
-    let duration = Duration::from_millis(500);
+fn performance_with_id(id: u16) -> String {
+    // Wait as long as the id in secondes
+    let duration = Duration::from_secs(id.into());
     thread::sleep(duration);
     return format!("Waited {duration:?} for id {id}");
 }
