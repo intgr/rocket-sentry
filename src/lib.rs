@@ -45,8 +45,9 @@ use std::sync::{Arc, Mutex};
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::serde::Deserialize;
 use rocket::{fairing, Build, Rocket, Request, Data, Response};
+use rocket::http::Status;
 use rocket::request::local_cache_once;
-use sentry::{ClientInitGuard, ClientOptions, Transaction};
+use sentry::{ClientInitGuard, ClientOptions, protocol, Transaction};
 
 const TRANSACTION_OPERATION_NAME: &str = "http.server";
 
@@ -141,7 +142,7 @@ impl Fairing for RocketSentry {
         // We take the transaction set in the on_request callback
         let request_transaction = local_cache_once!(request, Self::invalid_transaction);
         let ongoing_transaction: &Transaction = request.local_cache(request_transaction);
-        // TODO ongoing_transaction.set_status(response.status());
+        ongoing_transaction.set_status(map_status(response.status()));
         ongoing_transaction.clone().finish();
     }
 }
@@ -150,6 +151,23 @@ fn request_to_transaction_name(request: &Request) -> String {
     let method = request.method();
     let path = request.uri().path();
     format!("{method} {path}")
+}
+
+fn map_status(status: Status) -> protocol::SpanStatus {
+    match status.code {
+        100..=299 => protocol::SpanStatus::Ok,
+        300..=399 => protocol::SpanStatus::InvalidArgument,
+        401 => protocol::SpanStatus::Unauthenticated,
+        403 => protocol::SpanStatus::PermissionDenied,
+        404 => protocol::SpanStatus::NotFound,
+        409 => protocol::SpanStatus::AlreadyExists,
+        429 => protocol::SpanStatus::ResourceExhausted,
+        400..=499 => protocol::SpanStatus::InvalidArgument,
+        501 => protocol::SpanStatus::Unimplemented,
+        503 => protocol::SpanStatus::Unavailable,
+        500..=599 => protocol::SpanStatus::InternalError,
+        _ => protocol::SpanStatus::UnknownError,
+    }
 }
 
 #[cfg(test)]
