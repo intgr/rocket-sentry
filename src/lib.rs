@@ -93,7 +93,7 @@ impl RocketSentry {
         }
     }
 
-    fn build_transaction(name: &str) -> Transaction {
+    fn start_transaction(name: &str) -> Transaction {
         let transaction_context = sentry::TransactionContext::new(
             name,
             TRANSACTION_OPERATION_NAME,
@@ -101,9 +101,11 @@ impl RocketSentry {
         sentry::start_transaction(transaction_context)
     }
 
+    /// Same type as the underlying function so as to retrieve a transaction from the cache.
+    /// Should not be called but won't panic either.
     fn invalid_transaction() -> Transaction {
         let name = "INVALID TRANSACTION";
-        Self::build_transaction(name)
+        Self::start_transaction(name)
     }
 }
 
@@ -136,7 +138,7 @@ impl Fairing for RocketSentry {
 
     async fn on_request(&self, request: &mut Request<'_>, _: &mut Data<'_>) {
         let name = request_to_transaction_name(request);
-        let build_transaction = move || Self::build_transaction(&name);
+        let build_transaction = move || Self::start_transaction(&name);
         let request_transaction = local_cache_once!(request, build_transaction);
         request.local_cache(request_transaction);
     }
