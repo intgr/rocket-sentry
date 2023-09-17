@@ -58,6 +58,7 @@ pub struct RocketSentry {
 #[derive(Deserialize)]
 struct Config {
     sentry_dsn: String,
+    sentry_transaction_sample_rate: Option<f32>,  // Default is 0 so no transaction transmitted
 }
 
 impl RocketSentry {
@@ -67,7 +68,7 @@ impl RocketSentry {
         }
     }
 
-    fn init(&self, dsn: &str) {
+    fn init(&self, dsn: &str, traces_sample_rate: f32) {
         let guard = sentry::init((
             dsn,
             ClientOptions {
@@ -75,7 +76,7 @@ impl RocketSentry {
                     info!("Sending event to Sentry: {}", event.event_id);
                     Some(event)
                 })),
-                traces_sample_rate: 1.0,  // TODO set it via config and default to 0
+                traces_sample_rate,
                 ..Default::default()
             },
         ));
@@ -123,7 +124,8 @@ impl Fairing for RocketSentry {
                 if config.sentry_dsn.is_empty() {
                     info!("Sentry disabled.");
                 } else {
-                    self.init(&config.sentry_dsn);
+                    let traces_sample_rate = config.sentry_transaction_sample_rate.unwrap_or(0f32);
+                    self.init(&config.sentry_dsn, traces_sample_rate);
                 }
             }
             Err(err) => error!("Sentry not configured: {}", err),
