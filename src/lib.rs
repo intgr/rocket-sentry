@@ -143,8 +143,21 @@ impl Fairing for RocketSentry {
         let request_transaction = local_cache_once!(request, Self::invalid_transaction);
         let ongoing_transaction: &Transaction = request.local_cache(request_transaction);
         ongoing_transaction.set_status(map_status(response.status()));
+        set_transaction_method(ongoing_transaction, request);
         ongoing_transaction.clone().finish();
     }
+}
+
+fn set_transaction_method(transaction: &Transaction, request: &Request) {
+    transaction.set_request(protocol::Request {
+        url: None,
+        method: Some(String::from(request.method().as_str())),
+        data: None,
+        query_string: None,
+        cookies: None,
+        headers: Default::default(),
+        env: Default::default(),
+    });
 }
 
 fn request_to_transaction_name(request: &Request) -> String {
