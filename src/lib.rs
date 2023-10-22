@@ -148,17 +148,17 @@ impl Fairing for RocketSentry {
         let request_transaction = local_cache_once!(request, Self::invalid_transaction);
         let ongoing_transaction: &Transaction = request.local_cache(request_transaction);
         ongoing_transaction.set_status(map_status(response.status()));
-        set_transaction_method(ongoing_transaction, request);
+        set_transaction_request(ongoing_transaction, request);
         ongoing_transaction.clone().finish();
     }
 }
 
-fn set_transaction_method(transaction: &Transaction, request: &Request) {
+fn set_transaction_request(transaction: &Transaction, request: &Request) {
     transaction.set_request(protocol::Request {
         url: None,
         method: Some(String::from(request.method().as_str())),
         data: None,
-        query_string: None,
+        query_string: request_to_query_string(request),
         cookies: None,
         headers: Default::default(),
         env: Default::default(),
@@ -169,6 +169,11 @@ fn request_to_transaction_name(request: &Request) -> String {
     let method = request.method();
     let path = request.uri().path();
     format!("{method} {path}")
+}
+
+fn request_to_query_string(request: &Request) -> Option<String> {
+    let query_string = request.uri().query()?.as_str().to_string();
+    Some(query_string)
 }
 
 fn map_status(status: Status) -> protocol::SpanStatus {
@@ -191,7 +196,7 @@ fn map_status(status: Status) -> protocol::SpanStatus {
 #[cfg(test)]
 mod tests {
     use rocket::local::asynchronous::Client;
-    use crate::request_to_transaction_name;
+    use crate::{request_to_query_string, request_to_transaction_name};
 
     #[rocket::async_test]
     async fn request_to_sentry_transaction_name_get_no_path() {
@@ -225,5 +230,38 @@ mod tests {
 
         // Ideally, we should just returns /users/<id> as configured in the routes
         assert_eq!(transaction_name, "POST /users/6");
+    }
+
+    #[rocket::async_test]
+    async fn request_to_query_string_is_none() {
+        let rocket = rocket::build();
+        let client = Client::tracked(rocket).await.unwrap();
+        let request = client.post("/");
+
+        let query_string = request_to_query_string(request.inner());
+
+        assert_eq!(query_string, None);
+    }
+
+    #[rocket::async_test]
+    async fn request_to_query_string_single_parameter() {
+        let rocket = rocket::build();
+        let client = Client::tracked(rocket).await.unwrap();
+        let request = client.post("/?param1=value1");
+
+        let query_string = request_to_query_string(request.inner());
+
+        assert_eq!(query_string, Some("param1=value1".to_string()));
+    }
+
+    #[rocket::async_test]
+    async fn request_to_query_string_multiple_parameters() {
+        let rocket = rocket::build();
+        let client = Client::tracked(rocket).await.unwrap();
+        let request = client.post("/?param1=value1&param2=value2");
+
+        let query_string = request_to_query_string(request.inner());
+
+        assert_eq!(query_string, Some("param1=value1&param2=value2".to_string()));
     }
 }

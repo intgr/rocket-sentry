@@ -22,9 +22,17 @@ fn performance_with_id(id: u16) -> String {
     return format!("Waited {duration:?} for id {id}");
 }
 
+#[get("/performance?<param1>&<param2>")]
+fn performance_with_parameter(param1: String, param2: u32) -> String {
+    let duration = Duration::from_millis(250);
+    thread::sleep(duration);
+    return format!("Waited {duration:?} for param {param1} - {param2}");
+}
+
+
 #[launch]
 fn rocket() -> Rocket<Build> {
     rocket::build()
         .attach(RocketSentry::fairing())
-        .mount("/", routes![performance, performance_with_id])
+        .mount("/", routes![performance, performance_with_id, performance_with_parameter])
 }
