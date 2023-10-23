@@ -44,12 +44,12 @@ extern crate log;
 use std::sync::{Arc, Mutex};
 
 use rocket::fairing::{Fairing, Info, Kind};
-use rocket::serde::Deserialize;
-use rocket::{fairing, Build, Rocket, Request, Data, Response};
 use rocket::http::Status;
 use rocket::request::local_cache_once;
-use sentry::{ClientInitGuard, ClientOptions, protocol, Transaction};
+use rocket::serde::Deserialize;
+use rocket::{fairing, Build, Data, Request, Response, Rocket};
 use sentry::protocol::SpanStatus;
+use sentry::{protocol, ClientInitGuard, ClientOptions, Transaction};
 
 const TRANSACTION_OPERATION_NAME: &str = "http.server";
 
@@ -60,7 +60,7 @@ pub struct RocketSentry {
 #[derive(Deserialize)]
 struct Config {
     sentry_dsn: String,
-    sentry_traces_sample_rate: Option<f32>,  // Default is 0 so no transaction transmitted
+    sentry_traces_sample_rate: Option<f32>, // Default is 0 so no transaction transmitted
 }
 
 impl RocketSentry {
@@ -95,10 +95,7 @@ impl RocketSentry {
     }
 
     fn start_transaction(name: &str) -> Transaction {
-        let transaction_context = sentry::TransactionContext::new(
-            name,
-            TRANSACTION_OPERATION_NAME,
-        );
+        let transaction_context = sentry::TransactionContext::new(name, TRANSACTION_OPERATION_NAME);
         sentry::start_transaction(transaction_context)
     }
 
@@ -195,8 +192,8 @@ fn map_status(status: Status) -> SpanStatus {
 
 #[cfg(test)]
 mod tests {
-    use rocket::local::asynchronous::Client;
     use crate::{request_to_query_string, request_to_transaction_name};
+    use rocket::local::asynchronous::Client;
 
     #[rocket::async_test]
     async fn request_to_sentry_transaction_name_get_no_path() {
@@ -262,6 +259,9 @@ mod tests {
 
         let query_string = request_to_query_string(request.inner());
 
-        assert_eq!(query_string, Some("param1=value1&param2=value2".to_string()));
+        assert_eq!(
+            query_string,
+            Some("param1=value1&param2=value2".to_string())
+        );
     }
 }
