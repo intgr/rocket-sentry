@@ -1,9 +1,9 @@
 #[macro_use]
 extern crate rocket;
 
+use rocket::{Build, Rocket};
 use std::thread;
 use std::time::Duration;
-use rocket::{Build, Rocket};
 
 use rocket_sentry::RocketSentry;
 
@@ -29,10 +29,10 @@ fn performance_with_parameter(param1: String, param2: u32) -> String {
     return format!("Waited {duration:?} for param {param1} - {param2}");
 }
 
-
 #[launch]
 fn rocket() -> Rocket<Build> {
-    rocket::build()
-        .attach(RocketSentry::fairing())
-        .mount("/", routes![performance, performance_with_id, performance_with_parameter])
+    rocket::build().attach(RocketSentry::fairing()).mount(
+        "/",
+        routes![performance, performance_with_id, performance_with_parameter],
+    )
 }

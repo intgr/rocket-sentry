@@ -35,7 +35,7 @@
 //! sentry_dsn = ""  # Disabled
 //! [release]
 //! sentry_dsn = "https://057006d7dfe5fff0fbed461cfca5f757@sentry.io/1111111"
-//! sentry_transaction_sample_rate = 0.2  # 20% of requests will be logged under the performance tab
+//! sentry_traces_sample_rate = 0.2  # 20% of requests will be logged under the performance tab
 //! ```
 //!
 #[macro_use]
@@ -49,6 +49,7 @@ use rocket::{fairing, Build, Rocket, Request, Data, Response};
 use rocket::http::Status;
 use rocket::request::local_cache_once;
 use sentry::{ClientInitGuard, ClientOptions, protocol, Transaction};
+use sentry::protocol::SpanStatus;
 
 const TRANSACTION_OPERATION_NAME: &str = "http.server";
 
@@ -59,7 +60,7 @@ pub struct RocketSentry {
 #[derive(Deserialize)]
 struct Config {
     sentry_dsn: String,
-    sentry_transaction_sample_rate: Option<f32>,  // Default is 0 so no transaction transmitted
+    sentry_traces_sample_rate: Option<f32>,  // Default is 0 so no transaction transmitted
 }
 
 impl RocketSentry {
@@ -127,7 +128,7 @@ impl Fairing for RocketSentry {
                 if config.sentry_dsn.is_empty() {
                     info!("Sentry disabled.");
                 } else {
-                    let traces_sample_rate = config.sentry_transaction_sample_rate.unwrap_or(0f32);
+                    let traces_sample_rate = config.sentry_traces_sample_rate.unwrap_or(0f32);
                     self.init(&config.sentry_dsn, traces_sample_rate);
                 }
             }
@@ -156,7 +157,7 @@ impl Fairing for RocketSentry {
 fn set_transaction_request(transaction: &Transaction, request: &Request) {
     transaction.set_request(protocol::Request {
         url: None,
-        method: Some(String::from(request.method().as_str())),
+        method: Some(request.method().to_string()),
         data: None,
         query_string: request_to_query_string(request),
         cookies: None,
@@ -172,24 +173,23 @@ fn request_to_transaction_name(request: &Request) -> String {
 }
 
 fn request_to_query_string(request: &Request) -> Option<String> {
-    let query_string = request.uri().query()?.as_str().to_string();
-    Some(query_string)
+    Some(request.uri().query()?.to_string())
 }
 
-fn map_status(status: Status) -> protocol::SpanStatus {
+fn map_status(status: Status) -> SpanStatus {
     match status.code {
-        100..=299 => protocol::SpanStatus::Ok,
-        300..=399 => protocol::SpanStatus::InvalidArgument,
-        401 => protocol::SpanStatus::Unauthenticated,
-        403 => protocol::SpanStatus::PermissionDenied,
-        404 => protocol::SpanStatus::NotFound,
-        409 => protocol::SpanStatus::AlreadyExists,
-        429 => protocol::SpanStatus::ResourceExhausted,
-        400..=499 => protocol::SpanStatus::InvalidArgument,
-        501 => protocol::SpanStatus::Unimplemented,
-        503 => protocol::SpanStatus::Unavailable,
-        500..=599 => protocol::SpanStatus::InternalError,
-        _ => protocol::SpanStatus::UnknownError,
+        100..=299 => SpanStatus::Ok,
+        300..=399 => SpanStatus::InvalidArgument,
+        401 => SpanStatus::Unauthenticated,
+        403 => SpanStatus::PermissionDenied,
+        404 => SpanStatus::NotFound,
+        409 => SpanStatus::AlreadyExists,
+        429 => SpanStatus::ResourceExhausted,
+        400..=499 => SpanStatus::InvalidArgument,
+        501 => SpanStatus::Unimplemented,
+        503 => SpanStatus::Unavailable,
+        500..=599 => SpanStatus::InternalError,
+        _ => SpanStatus::UnknownError,
     }
 }
 

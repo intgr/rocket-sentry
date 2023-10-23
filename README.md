@@ -50,7 +50,7 @@ the `Rocket.toml` file, for example:
 sentry_dsn = ""  # Disabled
 [release]
 sentry_dsn = "https://057006d7dfe5fff0fbed461cfca5f757@sentry.io/1111111"
-sentry_transaction_sample_rate = 0.2  # 20% of requests will be logged under the performance tab
+sentry_traces_sample_rate = 0.2  # 20% of requests will be logged under the performance tab
 ```
 
 Testing
