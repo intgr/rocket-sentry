@@ -22,9 +22,9 @@ Currently `rocket-sentry` enables the Rust panic handler and support basic [tran
 Transactions fields supported are:
  - [X] HTTP method
  - [X] GET query_string
+ - [X] headers
  - [ ] POST data
  - [ ] cookies
- - [ ] headers
  - [ ] environment
  - [ ] url
 

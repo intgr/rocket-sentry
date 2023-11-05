@@ -41,6 +41,7 @@
 #[macro_use]
 extern crate log;
 
+use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex};
 
 use rocket::fairing::{Fairing, Info, Kind};
@@ -158,7 +159,7 @@ fn set_transaction_request(transaction: &Transaction, request: &Request) {
         data: None,
         query_string: request_to_query_string(request),
         cookies: None,
-        headers: Default::default(),
+        headers: request_to_header_map(request),
         env: Default::default(),
     });
 }
@@ -192,10 +193,20 @@ fn map_status(status: Status) -> SpanStatus {
     }
 }
 
+fn request_to_header_map(request: &Request) -> BTreeMap<String, String> {
+    BTreeMap::from_iter(
+        request.headers().iter().map(
+            |header| (header.name().to_string(), header.value().to_string())
+        )
+    )
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::{request_to_query_string, request_to_transaction_name};
+    use rocket::http::Header;
+    use crate::{request_to_header_map, request_to_query_string, request_to_transaction_name};
     use rocket::local::asynchronous::Client;
+    use rocket::http::ContentType;
 
     #[rocket::async_test]
     async fn request_to_sentry_transaction_name_get_no_path() {
@@ -265,5 +276,30 @@ mod tests {
             query_string,
             Some("param1=value1&param2=value2".to_string())
         );
+    }
+
+    #[rocket::async_test]
+    async fn request_to_header_map_is_empty() {
+        let rocket = rocket::build();
+        let client = Client::tracked(rocket).await.unwrap();
+        let request = client.get("/");
+
+        let header_map = request_to_header_map(request.inner());
+
+        assert!(header_map.is_empty());
+    }
+
+    #[rocket::async_test]
+    async fn request_to_header_map_multiple() {
+        let rocket = rocket::build();
+        let client = Client::tracked(rocket).await.unwrap();
+        let request = client.get("/")
+            .header(ContentType::JSON)
+            .header(Header::new("custom-key", "custom-value"));
+
+        let header_map = request_to_header_map(request.inner());
+
+        assert_eq!(header_map.get("custom-key"), Some(&"custom-value".to_string()));
+        assert_eq!(header_map.get("Content-Type"), Some(&"application/json".to_string()));
     }
 }
