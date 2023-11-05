@@ -176,7 +176,9 @@ fn request_to_query_string(request: &Request) -> Option<String> {
 fn map_status(status: Status) -> SpanStatus {
     match status.code {
         100..=299 => SpanStatus::Ok,
-        300..=399 => SpanStatus::InvalidArgument,
+        // For 3xx there is no appropriate redirect status, so we default to Ok as flask does,
+        // See https://github.com/intgr/rocket-sentry/pull/59#discussion_r1367905267
+        300..=399 => SpanStatus::Ok,
         401 => SpanStatus::Unauthenticated,
         403 => SpanStatus::PermissionDenied,
         404 => SpanStatus::NotFound,
