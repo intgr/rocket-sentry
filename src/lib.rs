@@ -195,18 +195,19 @@ fn map_status(status: Status) -> SpanStatus {
 
 fn request_to_header_map(request: &Request) -> BTreeMap<String, String> {
     BTreeMap::from_iter(
-        request.headers().iter().map(
-            |header| (header.name().to_string(), header.value().to_string())
-        )
+        request
+            .headers()
+            .iter()
+            .map(|header| (header.name().to_string(), header.value().to_string())),
     )
 }
 
 #[cfg(test)]
 mod tests {
-    use rocket::http::Header;
     use crate::{request_to_header_map, request_to_query_string, request_to_transaction_name};
-    use rocket::local::asynchronous::Client;
     use rocket::http::ContentType;
+    use rocket::http::Header;
+    use rocket::local::asynchronous::Client;
 
     #[rocket::async_test]
     async fn request_to_sentry_transaction_name_get_no_path() {
@@ -293,13 +294,20 @@ mod tests {
     async fn request_to_header_map_multiple() {
         let rocket = rocket::build();
         let client = Client::tracked(rocket).await.unwrap();
-        let request = client.get("/")
+        let request = client
+            .get("/")
             .header(ContentType::JSON)
             .header(Header::new("custom-key", "custom-value"));
 
         let header_map = request_to_header_map(request.inner());
 
-        assert_eq!(header_map.get("custom-key"), Some(&"custom-value".to_string()));
-        assert_eq!(header_map.get("Content-Type"), Some(&"application/json".to_string()));
+        assert_eq!(
+            header_map.get("custom-key"),
+            Some(&"custom-value".to_string())
+        );
+        assert_eq!(
+            header_map.get("Content-Type"),
+            Some(&"application/json".to_string())
+        );
     }
 }
