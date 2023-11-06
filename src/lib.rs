@@ -178,7 +178,7 @@ fn map_status(status: Status) -> SpanStatus {
     match status.code {
         100..=299 => SpanStatus::Ok,
         // For 3xx there is no appropriate redirect status, so we default to Ok as flask does,
-        // See https://github.com/intgr/rocket-sentry/pull/59#discussion_r1367905267
+        // https://github.com/getsentry/sentry-python/blob/e0d7bb733b5db43531b1efae431669bfe9e63908/sentry_sdk/tracing.py#L408-L435
         300..=399 => SpanStatus::Ok,
         401 => SpanStatus::Unauthenticated,
         403 => SpanStatus::PermissionDenied,
