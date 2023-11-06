@@ -44,6 +44,8 @@ extern crate log;
 use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex};
 
+use std::sync::atomic::{AtomicBool, Ordering};
+
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::Status;
 use rocket::request::local_cache_once;
@@ -56,6 +58,7 @@ const TRANSACTION_OPERATION_NAME: &str = "http.server";
 
 pub struct RocketSentry {
     guard: Mutex<Option<ClientInitGuard>>,
+    transactions_enabled: AtomicBool,
 }
 
 #[derive(Deserialize)]
@@ -68,6 +71,7 @@ impl RocketSentry {
     pub fn fairing() -> impl Fairing {
         RocketSentry {
             guard: Mutex::new(None),
+            transactions_enabled: AtomicBool::new(false),
         }
     }
 
@@ -90,6 +94,9 @@ impl RocketSentry {
             *self_guard = Some(guard);
 
             info!("Sentry enabled.");
+            if traces_sample_rate > 0f32 {
+                self.transactions_enabled.store(true, Ordering::Relaxed);
+            }
         } else {
             error!("Sentry did not initialize.");
         }
@@ -136,19 +143,23 @@ impl Fairing for RocketSentry {
     }
 
     async fn on_request(&self, request: &mut Request<'_>, _: &mut Data<'_>) {
-        let name = request_to_transaction_name(request);
-        let build_transaction = move || Self::start_transaction(&name);
-        let request_transaction = local_cache_once!(request, build_transaction);
-        request.local_cache(request_transaction);
+        if self.transactions_enabled.load(Ordering::Relaxed) {
+            let name = request_to_transaction_name(request);
+            let build_transaction = move || Self::start_transaction(&name);
+            let request_transaction = local_cache_once!(request, build_transaction);
+            request.local_cache(request_transaction);
+        }
     }
 
     async fn on_response<'r>(&self, request: &'r Request<'_>, response: &mut Response<'r>) {
-        // We take the transaction set in the on_request callback
-        let request_transaction = local_cache_once!(request, Self::invalid_transaction);
-        let ongoing_transaction: &Transaction = request.local_cache(request_transaction);
-        ongoing_transaction.set_status(map_status(response.status()));
-        set_transaction_request(ongoing_transaction, request);
-        ongoing_transaction.clone().finish();
+        if self.transactions_enabled.load(Ordering::Relaxed) {
+            // We take the transaction set in the on_request callback
+            let request_transaction = local_cache_once!(request, Self::invalid_transaction);
+            let ongoing_transaction: &Transaction = request.local_cache(request_transaction);
+            ongoing_transaction.set_status(map_status(response.status()));
+            set_transaction_request(ongoing_transaction, request);
+            ongoing_transaction.clone().finish();
+        }
     }
 }
 
