@@ -18,8 +18,16 @@ Or maybe...
 Features
 --------
 
-Currently `rocket-sentry` is very basic, it only enables the Rust panic handler.
-There is no integration with the Rocket request lifecycle.
+Currently `rocket-sentry` enables the Rust panic handler and support basic [transactions](https://docs.sentry.io/product/performance/transaction-summary/).  
+Transactions fields supported are:
+ - [X] HTTP method
+ - [X] GET query_string
+ - [X] headers
+ - [ ] POST data
+ - [ ] cookies
+ - [ ] environment
+ - [ ] url
+
 Pull requests welcome!
 
 `rocket-sentry` can be configured via `Rocket.toml` (`sentry_dsn=`) or
@@ -50,6 +58,7 @@ the `Rocket.toml` file, for example:
 sentry_dsn = ""  # Disabled
 [release]
 sentry_dsn = "https://057006d7dfe5fff0fbed461cfca5f757@sentry.io/1111111"
+sentry_traces_sample_rate = 0.2  # 20% of requests will be logged under the performance tab
 ```
 
 Testing
