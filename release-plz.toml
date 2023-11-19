@@ -1,0 +1,8 @@
+[workspace]
+# git-cliff configuration
+changelog_config = "cliff.toml"
+changelog_update = true
+git_tag_enable = true
+git_release_enable = true
+pr_labels = ["release"]
+semver_check = true
