@@ -5,14 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is similar to [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.15.1] - 2023-11-19
+## [0.16.0] - 2023-11-19
 
-- **Documentation:** Improvements to features/usage documentation ([#66](https://github.com/intgr/rocket-sentry/pull/66))
-- **CI:** Simplify release-plz setup ([#65](https://github.com/intgr/rocket-sentry/pull/65))
-- **CI:** Set up release automation with release-plz ([#63](https://github.com/intgr/rocket-sentry/pull/63))
-- **Documentation:** Move history to CHANGELOG.md and auto-generate it ([#60](https://github.com/intgr/rocket-sentry/pull/60))
-- Add Performance Monitoring (transactions) support ([#59](https://github.com/intgr/rocket-sentry/pull/59))
+- **Added:** Performance Monitoring (transactions) support ([#59](https://github.com/intgr/rocket-sentry/pull/59))
 - **Dependency:** Update Rust crate sentry to 0.31.7 ([#57](https://github.com/intgr/rocket-sentry/pull/57))
+- **Documentation:** Move history to CHANGELOG.md and auto-generate it ([#60](https://github.com/intgr/rocket-sentry/pull/60))
+- **CI:** Set up release automation with release-plz ([#63](https://github.com/intgr/rocket-sentry/pull/63))
 
 ## [0.15.0] - 2023-02-25
 
