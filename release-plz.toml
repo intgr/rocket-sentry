@@ -1,0 +1,9 @@
+[workspace]
+# git-cliff configuration
+changelog_config = "cliff.toml"
+changelog_update = true
+git_tag_enable = true
+# GitHub releases are handled by `cargo-dist`
+git_release_enable = false
+pr_labels = ["release"]
+semver_check = true
