@@ -19,8 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.12.0] - 2022-09-30
 
+- **Added** Log a message when Sentry events are sent ([#48](https://github.com/intgr/rocket-sentry/pull/48))
 - **Dependency:** Update Rust crate sentry to 0.27.0 ([#44](https://github.com/intgr/rocket-sentry/pull/44))
-- Log a message when Sentry events are sent ([#48](https://github.com/intgr/rocket-sentry/pull/48))
 
 ## [0.11.0] - 2022-05-22
 
@@ -48,7 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.7.0] - 2021-07-13
 
 - **Dependency:** Update sentry requirement from 0.22 to 0.23 ([#20](https://github.com/intgr/rocket-sentry/pull/20))
-- Fix Rust 1.52 warning "panic message is not a string literal" ([#18](https://github.com/intgr/rocket-sentry/pull/18))
+- **Chore:** Fix Rust 1.52 warning "panic message is not a string literal" ([#18](https://github.com/intgr/rocket-sentry/pull/18))
 
 ## [0.6.0] - 2021-01-26
 
