@@ -19,23 +19,28 @@ Or maybe...
 Features
 --------
 
-Currently `rocket-sentry` enables the Rust panic handler and support basic [transactions](https://docs.sentry.io/product/performance/transaction-summary/).  
-Transactions fields supported are:
- - [X] HTTP method
- - [X] GET query_string
- - [X] headers
- - [ ] POST data
- - [ ] cookies
- - [ ] environment
- - [ ] url
+Currently `rocket-sentry` includes two integrations:
+
+* **Rust panic handler:** when a panic happens, it is reported as a Sentry event.
+* **Performance Monitoring:** HTTP requests are reported as [Transactions](https://docs.sentry.io/product/performance/transaction-summary/),
+  if the `sentry_traces_sample_rate` setting is configured.
+
+  Transactions currently include the following fields:
+  - [X] HTTP method
+  - [X] GET query string
+  - [X] headers
+  - [ ] POST data
+  - [ ] cookies
+  - [ ] environment
+  - [ ] URL
 
 Pull requests welcome!
 
-`rocket-sentry` can be configured via `Rocket.toml` (`sentry_dsn=`) or
-environment variable `ROCKET_SENTRY_DSN`.
-
 Usage
 -----
+
+`rocket-sentry` can be configured via `Rocket.toml` (`sentry_dsn=`) or
+environment variable `ROCKET_SENTRY_DSN`.
 
 To use this, add the dependency to your `Cargo.toml`, and add the fairing
 to your code:
