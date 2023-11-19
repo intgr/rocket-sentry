@@ -1,0 +1,8 @@
+# release-plz configuration. https://release-plz.ieni.dev/docs/config
+[workspace]
+changelog_config = "cliff.toml"
+changelog_update = true
+git_tag_enable = true
+git_release_enable = true
+pr_labels = ["release"]
+semver_check = true
