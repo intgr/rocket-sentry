@@ -1,5 +1,4 @@
-#![warn(clippy::must_use_candidate)]
-#![allow(clippy::needless_doctest_main)]
+#![warn(clippy::pedantic)]
 //! **rocket-sentry** is a simple add-on for the **Rocket** web framework to simplify
 //! integration with the **Sentry** application monitoring system.
 //!
@@ -43,9 +42,8 @@
 extern crate log;
 
 use std::collections::BTreeMap;
-use std::sync::{Arc, Mutex};
-
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
 
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::Status;
@@ -173,7 +171,7 @@ fn set_transaction_request(transaction: &Transaction, request: &Request) {
         query_string: request_to_query_string(request),
         cookies: None,
         headers: request_to_header_map(request),
-        env: Default::default(),
+        env: BTreeMap::new(),
     });
 }
 
@@ -188,6 +186,7 @@ fn request_to_query_string(request: &Request) -> Option<String> {
 }
 
 fn map_status(status: Status) -> SpanStatus {
+    #[allow(clippy::match_same_arms)]
     match status.code {
         100..=299 => SpanStatus::Ok,
         // For 3xx there is no appropriate redirect status, so we default to Ok as flask does,
@@ -207,20 +206,20 @@ fn map_status(status: Status) -> SpanStatus {
 }
 
 fn request_to_header_map(request: &Request) -> BTreeMap<String, String> {
-    BTreeMap::from_iter(
-        request
-            .headers()
-            .iter()
-            .map(|header| (header.name().to_string(), header.value().to_string())),
-    )
+    request
+        .headers()
+        .iter()
+        .map(|header| (header.name().to_string(), header.value().to_string()))
+        .collect()
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{request_to_header_map, request_to_query_string, request_to_transaction_name};
     use rocket::http::ContentType;
     use rocket::http::Header;
     use rocket::local::asynchronous::Client;
+
+    use crate::{request_to_header_map, request_to_query_string, request_to_transaction_name};
 
     #[rocket::async_test]
     async fn request_to_sentry_transaction_name_get_no_path() {
