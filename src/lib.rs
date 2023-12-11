@@ -1,3 +1,4 @@
+#![warn(clippy::must_use_candidate)]
 #![allow(clippy::needless_doctest_main)]
 //! **rocket-sentry** is a simple add-on for the **Rocket** web framework to simplify
 //! integration with the **Sentry** application monitoring system.
@@ -68,6 +69,7 @@ struct Config {
 }
 
 impl RocketSentry {
+    #[must_use]
     pub fn fairing() -> impl Fairing {
         RocketSentry {
             guard: Mutex::new(None),
