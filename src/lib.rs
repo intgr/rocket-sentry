@@ -1,4 +1,3 @@
-#![warn(clippy::pedantic)]
 //! **rocket-sentry** is a simple add-on for the **Rocket** web framework to simplify
 //! integration with the **Sentry** application monitoring system.
 //!
@@ -37,7 +36,14 @@
 //! sentry_dsn = "https://057006d7dfe5fff0fbed461cfca5f757@sentry.io/1111111"
 //! sentry_traces_sample_rate = 0.2  # 20% of requests will be logged under the performance tab
 //! ```
-//!
+
+#![warn(missing_docs)]
+#![warn(clippy::cargo)]
+#![warn(clippy::pedantic)]
+#![warn(clippy::impl_trait_in_params)]
+#![warn(clippy::print_stdout)]
+#![allow(clippy::module_name_repetitions)]
+
 #[macro_use]
 extern crate log;
 
