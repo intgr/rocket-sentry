@@ -6,6 +6,8 @@ WORKDIR /root/build
 # Make warnings fatal
 ENV RUSTFLAGS="-D warnings"
 
+RUN rustup component add rustfmt clippy
+
 # Build Cargo dependencies for cache
 COPY Cargo.toml ./
 RUN mkdir src/ && \
