@@ -58,12 +58,15 @@ const TRANSACTION_OPERATION_NAME: &str = "http.server";
 pub struct RocketSentry {
     guard: Mutex<Option<ClientInitGuard>>,
     transactions_enabled: AtomicBool,
+    paths_to_filter_out: Mutex<Vec<String>>,
 }
 
 #[derive(Deserialize)]
 struct Config {
     sentry_dsn: String,
-    sentry_traces_sample_rate: Option<f32>, // Default is 0 so no transaction transmitted
+    sentry_traces_sample_rate: Option<f32>,
+    // Default is 0 so no transaction transmitted
+    path_to_filter: Option<Vec<String>>,
 }
 
 impl RocketSentry {
@@ -72,10 +75,11 @@ impl RocketSentry {
         RocketSentry {
             guard: Mutex::new(None),
             transactions_enabled: AtomicBool::new(false),
+            paths_to_filter_out: Mutex::new(vec![]),
         }
     }
 
-    fn init(&self, dsn: &str, traces_sample_rate: f32) {
+    fn init(&self, dsn: &str, traces_sample_rate: f32, paths_to_filter_out: Vec<String>) {
         let guard = sentry::init((
             dsn,
             ClientOptions {
@@ -92,7 +96,8 @@ impl RocketSentry {
             // Tuck the ClientInitGuard in the fairing, so it lives as long as the server.
             let mut self_guard = self.guard.lock().unwrap();
             *self_guard = Some(guard);
-
+            let mut filters = self.paths_to_filter_out.lock().unwrap();
+            *filters = paths_to_filter_out;
             info!("Sentry enabled.");
             if traces_sample_rate > 0f32 {
                 self.transactions_enabled.store(true, Ordering::Relaxed);
@@ -134,7 +139,8 @@ impl Fairing for RocketSentry {
                     info!("Sentry disabled.");
                 } else {
                     let traces_sample_rate = config.sentry_traces_sample_rate.unwrap_or(0f32);
-                    self.init(&config.sentry_dsn, traces_sample_rate);
+                    let paths_to_filter_out = config.path_to_filter.unwrap_or_default();
+                    self.init(&config.sentry_dsn, traces_sample_rate, paths_to_filter_out);
                 }
             }
             Err(err) => error!("Sentry not configured: {}", err),
@@ -143,26 +149,48 @@ impl Fairing for RocketSentry {
     }
 
     async fn on_request(&self, request: &mut Request<'_>, _: &mut Data<'_>) {
-        if self.transactions_enabled.load(Ordering::Relaxed) {
-            let name = request_to_transaction_name(request);
-            let build_transaction = move || Self::start_transaction(&name);
-            let request_transaction = local_cache_once!(request, build_transaction);
-            request.local_cache(request_transaction);
+        match self
+            .paths_to_filter_out
+            .lock()
+            .unwrap()
+            .iter()
+            .find(|e| request.uri().path().as_str().starts_with(*e))
+        {
+            None => {
+                if self.transactions_enabled.load(Ordering::Relaxed) {
+                    let name = request_to_transaction_name(request);
+                    let build_transaction = move || Self::start_transaction(&name);
+                    let request_transaction = local_cache_once!(request, build_transaction);
+                    request.local_cache(request_transaction);
+                }
+            }
+            Some(_) => return,
         }
     }
 
     async fn on_response<'r>(&self, request: &'r Request<'_>, response: &mut Response<'r>) {
-        if self.transactions_enabled.load(Ordering::Relaxed) {
-            // We take the transaction set in the on_request callback
-            let request_transaction = local_cache_once!(request, Self::invalid_transaction);
-            let ongoing_transaction: &Transaction = request.local_cache(request_transaction);
-            ongoing_transaction.set_status(map_status(response.status()));
-            set_transaction_request(ongoing_transaction, request);
-            ongoing_transaction.clone().finish();
+        match self
+            .paths_to_filter_out
+            .lock()
+            .unwrap()
+            .iter()
+            .find(|e| request.uri().path().as_str().starts_with(*e))
+        {
+            None => {
+                if self.transactions_enabled.load(Ordering::Relaxed) {
+                    // We take the transaction set in the on_request callback
+                    let request_transaction = local_cache_once!(request, Self::invalid_transaction);
+                    let ongoing_transaction: &Transaction =
+                        request.local_cache(request_transaction);
+                    ongoing_transaction.set_status(map_status(response.status()));
+                    set_transaction_request(ongoing_transaction, request);
+                    ongoing_transaction.clone().finish();
+                }
+            }
+            Some(_) => return,
         }
     }
 }
-
 fn set_transaction_request(transaction: &Transaction, request: &Request) {
     transaction.set_request(protocol::Request {
         url: None,
