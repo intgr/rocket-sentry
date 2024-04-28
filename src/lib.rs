@@ -51,7 +51,7 @@ use rocket::request::local_cache_once;
 use rocket::serde::Deserialize;
 use rocket::{fairing, Build, Data, Request, Response, Rocket};
 use sentry::protocol::SpanStatus;
-use sentry::{protocol, ClientInitGuard, ClientOptions, Transaction};
+use sentry::{protocol, ClientInitGuard, ClientOptions, Transaction, TransactionContext};
 
 const TRANSACTION_OPERATION_NAME: &str = "http.server";
 
@@ -76,6 +76,16 @@ impl RocketSentry {
     }
 
     fn init(&self, dsn: &str, traces_sample_rate: f32) {
+        let traces_sampler = move |ctx: &TransactionContext| -> f32 {
+            if ctx.name() == "GET /performance" {
+                info!("Dropping performance transaction");
+                0.
+            } else {
+                info!("Sending performance transaction");
+                traces_sample_rate
+            }
+        };
+
         let guard = sentry::init((
             dsn,
             ClientOptions {
@@ -84,6 +94,7 @@ impl RocketSentry {
                     Some(event)
                 })),
                 traces_sample_rate,
+                traces_sampler: Some(Arc::new(traces_sampler)),
                 ..Default::default()
             },
         ));
