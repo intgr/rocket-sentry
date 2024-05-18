@@ -51,13 +51,14 @@ use rocket::request::local_cache_once;
 use rocket::serde::Deserialize;
 use rocket::{fairing, Build, Data, Request, Response, Rocket};
 use sentry::protocol::SpanStatus;
-use sentry::{protocol, ClientInitGuard, ClientOptions, Transaction, TransactionContext};
+use sentry::{protocol, ClientInitGuard, ClientOptions, Transaction, TracesSampler};
 
 const TRANSACTION_OPERATION_NAME: &str = "http.server";
 
 pub struct RocketSentry {
     guard: Mutex<Option<ClientInitGuard>>,
     transactions_enabled: AtomicBool,
+    traces_sampler: Option<Arc<TracesSampler>>,
 }
 
 #[derive(Deserialize)]
@@ -68,24 +69,26 @@ struct Config {
 
 impl RocketSentry {
     #[must_use]
-    pub fn fairing() -> impl Fairing {
+    pub fn new() -> Self {
         RocketSentry {
             guard: Mutex::new(None),
             transactions_enabled: AtomicBool::new(false),
+            traces_sampler: None,
         }
     }
 
-    fn init(&self, dsn: &str, traces_sample_rate: f32) {
-        let traces_sampler = move |ctx: &TransactionContext| -> f32 {
-            if ctx.name() == "GET /performance" {
-                info!("Dropping performance transaction");
-                0.
-            } else {
-                info!("Sending performance transaction");
-                traces_sample_rate
-            }
-        };
+    #[must_use]
+    pub fn fairing() -> impl Fairing {
+        RocketSentry::new()
+    }
 
+    #[must_use]
+    pub fn set_traces_sampler(mut self, traces_sampler: Arc<TracesSampler>) -> Self {
+        self.traces_sampler = Some(traces_sampler);
+        self
+    }
+
+    fn init(&self, dsn: &str, traces_sample_rate: f32) {
         let guard = sentry::init((
             dsn,
             ClientOptions {
@@ -94,7 +97,7 @@ impl RocketSentry {
                     Some(event)
                 })),
                 traces_sample_rate,
-                traces_sampler: Some(Arc::new(traces_sampler)),
+                traces_sampler: self.traces_sampler.clone(),
                 ..Default::default()
             },
         ));
@@ -123,6 +126,12 @@ impl RocketSentry {
     fn invalid_transaction() -> Transaction {
         let name = "INVALID TRANSACTION";
         Self::start_transaction(name)
+    }
+}
+
+impl Default for RocketSentry {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
