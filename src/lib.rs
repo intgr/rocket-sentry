@@ -108,7 +108,7 @@ impl RocketSentry {
             *self_guard = Some(guard);
 
             info!("Sentry enabled.");
-            if traces_sample_rate > 0f32 {
+            if traces_sample_rate > 0f32 || self.traces_sampler.is_some() {
                 self.transactions_enabled.store(true, Ordering::Relaxed);
             }
         } else {
@@ -235,11 +235,14 @@ fn request_to_header_map(request: &Request) -> BTreeMap<String, String> {
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
+    use std::sync::atomic::Ordering;
     use rocket::http::ContentType;
     use rocket::http::Header;
     use rocket::local::asynchronous::Client;
+    use sentry::TransactionContext;
 
-    use crate::{request_to_header_map, request_to_query_string, request_to_transaction_name};
+    use crate::{request_to_header_map, request_to_query_string, request_to_transaction_name, RocketSentry};
 
     #[rocket::async_test]
     async fn request_to_sentry_transaction_name_get_no_path() {
@@ -341,5 +344,37 @@ mod tests {
             header_map.get("Content-Type"),
             Some(&"application/json".to_string())
         );
+    }
+
+    /// Transaction are only enabled on either a positive traces_sample_rate or a set traces_sampler
+    #[rocket::async_test]
+    async fn transactions_not_enabled() {
+        let rocket_sentry = RocketSentry::new();
+
+        rocket_sentry.init("https://user@some.dsn/123", 0.);
+
+        assert_eq!(rocket_sentry.transactions_enabled.load(Ordering::Relaxed), false);
+    }
+
+    #[rocket::async_test]
+    async fn transactions_enabled_by_traces_sample_rate() {
+        let rocket_sentry = RocketSentry::new();
+
+        rocket_sentry.init("https://user@some.dsn/123", 0.01);
+
+        assert_eq!(rocket_sentry.transactions_enabled.load(Ordering::Relaxed), true);
+    }
+
+    #[rocket::async_test]
+    async fn transactions_enabled_by_traces_sampler() {
+        let rocket_sentry = RocketSentry::new().set_traces_sampler(Arc::new(
+            move |_: &TransactionContext| -> f32 {
+                0.  // Even a sampler that deny all transaction will mark transactions as enabled
+            }
+        ));
+
+        rocket_sentry.init("https://user@some.dsn/123", 0.);
+
+        assert_eq!(rocket_sentry.transactions_enabled.load(Ordering::Relaxed), true);
     }
 }
