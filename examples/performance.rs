@@ -47,6 +47,8 @@ fn performance_rng() -> String {
 
 #[launch]
 fn rocket() -> Rocket<Build> {
+    let rocket_instance = rocket::build();
+    let default_rate = rocket_instance.figment().extract_inner::<f32>("sentry_traces_sample_rate").unwrap();
     let traces_sampler = move |ctx: &TransactionContext| -> f32 {
         if ctx.name().to_lowercase().contains("skip") {
             log::warn!("Dropping performance transaction");
@@ -55,12 +57,12 @@ fn rocket() -> Rocket<Build> {
             log::warn!("Sending performance transaction half the time");
             0.5
         } else {
-            log::warn!("Sending performance transaction");
-            1.
+            log::warn!("Sending performance transaction using default rate");
+            default_rate
         }
     };
     let rocket_sentry = RocketSentry::new().set_traces_sampler(Arc::new(traces_sampler));
-    rocket::build().attach(rocket_sentry).mount(
+    rocket_instance.attach(rocket_sentry).mount(
         "/",
         routes![
             performance,

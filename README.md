@@ -73,18 +73,20 @@ use rocket_sentry::RocketSentry;
 
 #[launch]
 fn rocket() -> _ {
+    let rocket_instance = rocket::build();
+    let default_rate = rocket_instance.figment().extract_inner::<f32>("sentry_traces_sample_rate").unwrap();
     let traces_sampler = move |ctx: &TransactionContext| -> f32 {
         if matches!(ctx.name(), "GET /specific/path/1" | "GET /specific/path/2") {
             log::debug!("Dropping performance transaction");
             0.
         } else {
-            log::debug!("Sending performance transaction 80% of the time");
-            0.8
+            log::debug!("Sending performance transaction using the rate set in the config");
+            default_rate
         }
     };
     let rocket_sentry = RocketSentry::default().set_traces_sampler(Arc::new(traces_sampler));
 
-    rocket::build()
+    rocket_instance
         .attach(rocket_sentry)
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   add this line
 }
