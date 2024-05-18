@@ -1,5 +1,5 @@
-use std::sync::Arc;
 use sentry::{Hub, TransactionContext};
+use std::sync::Arc;
 
 use rocket_sentry::RocketSentry;
 
@@ -42,4 +42,3 @@ async fn fairing_init_with_specific_traces_sampler() {
 
     assert!(hub.client().is_some());
 }
-

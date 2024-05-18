@@ -1,11 +1,11 @@
 #[macro_use]
 extern crate rocket;
 
-use std::sync::Arc;
 use rocket::{Build, Rocket};
+use sentry::TransactionContext;
+use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
-use sentry::TransactionContext;
 
 use rocket_sentry::RocketSentry;
 
@@ -48,7 +48,10 @@ fn performance_rng() -> String {
 #[launch]
 fn rocket() -> Rocket<Build> {
     let rocket_instance = rocket::build();
-    let default_rate = rocket_instance.figment().extract_inner::<f32>("sentry_traces_sample_rate").unwrap();
+    let default_rate = rocket_instance
+        .figment()
+        .extract_inner::<f32>("sentry_traces_sample_rate")
+        .unwrap();
     let traces_sampler = move |ctx: &TransactionContext| -> f32 {
         if ctx.name().to_lowercase().contains("skip") {
             log::warn!("Dropping performance transaction");
