@@ -6,7 +6,7 @@ use rocket_sentry::RocketSentry;
 /// Smoke test: check that sentry gets initialized by the fairing.
 #[rocket::async_test]
 async fn fairing_init() {
-    let hub = Hub::main();
+    let hub = Hub::current();
     assert!(hub.client().is_none());
 
     let _rocket = rocket::build()
@@ -20,7 +20,7 @@ async fn fairing_init() {
 
 #[rocket::async_test]
 async fn fairing_init_with_specific_traces_sampler() {
-    let hub = Hub::main();
+    let hub = Hub::current();
     assert!(hub.client().is_none());
 
     let traces_sampler = move |ctx: &TransactionContext| -> f32 {
