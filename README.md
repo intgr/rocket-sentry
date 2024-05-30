@@ -23,7 +23,7 @@ Currently `rocket-sentry` includes two integrations:
 
 * **Rust panic handler:** when a panic happens, it is reported as a Sentry event.
 * **Performance Monitoring:** HTTP requests are reported as [Transactions](https://docs.sentry.io/product/performance/transaction-summary/),
-  if the `sentry_traces_sample_rate` setting is configured or `traces_sampler` is used (see example below).
+  if the `sentry_traces_sample_rate` setting is configured or `traces_sampler` callback is provided (see example below).
 
   Transactions currently include the following fields:
   - [X] HTTP method
@@ -77,7 +77,7 @@ fn rocket() -> _ {
     let default_rate = rocket_instance.figment().extract_inner::<f32>("sentry_traces_sample_rate").unwrap();
     let traces_sampler = move |ctx: &TransactionContext| -> f32 {
         if matches!(ctx.name(), "GET /specific/path/1" | "GET /specific/path/2") {
-            log::debug!("Dropping performance transaction");
+            // Drop the performance transaction
             0.
         } else {
             log::debug!("Sending performance transaction using the rate set in the config");
@@ -88,7 +88,6 @@ fn rocket() -> _ {
 
     rocket_instance
         .attach(rocket_sentry)
-    // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   add this line
 }
 ```
 
