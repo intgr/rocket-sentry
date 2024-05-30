@@ -69,17 +69,13 @@ struct Config {
 
 impl RocketSentry {
     #[must_use]
-    pub fn new() -> Self {
-        RocketSentry {
-            guard: Mutex::new(None),
-            transactions_enabled: AtomicBool::new(false),
-            traces_sampler: None,
-        }
+    pub fn fairing() -> RocketSentry {
+        RocketSentry::builder().build()
     }
 
     #[must_use]
-    pub fn fairing() -> impl Fairing {
-        RocketSentry::new()
+    pub fn builder() -> RocketSentryBuilder {
+        RocketSentryBuilder::default()
     }
 
     #[must_use]
@@ -126,12 +122,6 @@ impl RocketSentry {
     fn invalid_transaction() -> Transaction {
         let name = "INVALID TRANSACTION";
         Self::start_transaction(name)
-    }
-}
-
-impl Default for RocketSentry {
-    fn default() -> Self {
-        Self::new()
     }
 }
 
@@ -231,6 +221,35 @@ fn request_to_header_map(request: &Request) -> BTreeMap<String, String> {
         .iter()
         .map(|header| (header.name().to_string(), header.value().to_string()))
         .collect()
+}
+
+#[derive(Default)]
+pub struct RocketSentryBuilder {
+    traces_sampler: Option<Arc<TracesSampler>>,
+}
+
+impl RocketSentryBuilder {
+    #[must_use]
+    pub fn new() -> RocketSentryBuilder {
+        RocketSentryBuilder {
+            traces_sampler: None,
+        }
+    }
+
+    #[must_use]
+    pub fn traces_sampler(mut self, traces_sampler: Arc<TracesSampler>) -> RocketSentryBuilder {
+        self.traces_sampler = Some(traces_sampler);
+        self
+    }
+
+    #[must_use]
+    pub fn build(self) -> RocketSentry {
+        RocketSentry {
+            guard: Mutex::new(None),
+            transactions_enabled: AtomicBool::new(false),
+            traces_sampler: self.traces_sampler,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -351,7 +370,7 @@ mod tests {
     /// Transaction are only enabled on either a positive traces_sample_rate or a set traces_sampler
     #[rocket::async_test]
     async fn transactions_not_enabled() {
-        let rocket_sentry = RocketSentry::new();
+        let rocket_sentry = RocketSentry::fairing();
 
         rocket_sentry.init("https://user@some.dsn/123", 0.);
 
@@ -363,7 +382,7 @@ mod tests {
 
     #[rocket::async_test]
     async fn transactions_enabled_by_traces_sample_rate() {
-        let rocket_sentry = RocketSentry::new();
+        let rocket_sentry = RocketSentry::fairing();
 
         rocket_sentry.init("https://user@some.dsn/123", 0.01);
 
@@ -375,11 +394,11 @@ mod tests {
 
     #[rocket::async_test]
     async fn transactions_enabled_by_traces_sampler() {
-        let rocket_sentry = RocketSentry::new().set_traces_sampler(Arc::new(
-            move |_: &TransactionContext| -> f32 {
+        let rocket_sentry = RocketSentry::builder()
+            .traces_sampler(Arc::new(move |_: &TransactionContext| -> f32 {
                 0. // Even a sampler that deny all transaction will mark transactions as enabled
-            },
-        ));
+            }))
+            .build();
 
         rocket_sentry.init("https://user@some.dsn/123", 0.);
 

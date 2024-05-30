@@ -64,7 +64,9 @@ fn rocket() -> Rocket<Build> {
             default_rate
         }
     };
-    let rocket_sentry = RocketSentry::new().set_traces_sampler(Arc::new(traces_sampler));
+    let rocket_sentry = RocketSentry::builder()
+        .traces_sampler(Arc::new(traces_sampler))
+        .build();
     rocket_instance.attach(rocket_sentry).mount(
         "/",
         routes![

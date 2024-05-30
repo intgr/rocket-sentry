@@ -32,7 +32,9 @@ async fn fairing_init_with_specific_traces_sampler() {
             0.8
         }
     };
-    let rocket_sentry = RocketSentry::default().set_traces_sampler(Arc::new(traces_sampler));
+    let rocket_sentry = RocketSentry::builder()
+        .traces_sampler(Arc::new(traces_sampler))
+        .build();
 
     let _rocket = rocket::build()
         .attach(rocket_sentry)

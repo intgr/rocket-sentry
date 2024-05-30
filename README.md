@@ -80,7 +80,7 @@ fn rocket() -> _ {
         }
     };
     rocket::build()
-        .attach(RocketSentry::default().set_traces_sampler(Arc::new(traces_sampler)));
+        .attach(RocketSentry::builder().traces_sampler(Arc::new(traces_sampler)).build());
 }
 ```
 See [a more advanced example](examples/performance.rs).
