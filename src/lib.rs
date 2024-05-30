@@ -69,7 +69,7 @@ struct Config {
 
 impl RocketSentry {
     #[must_use]
-    pub fn fairing() -> RocketSentry {
+    pub fn fairing() -> impl Fairing {
         RocketSentry::builder().build()
     }
 
@@ -370,7 +370,7 @@ mod tests {
     /// Transaction are only enabled on either a positive traces_sample_rate or a set traces_sampler
     #[rocket::async_test]
     async fn transactions_not_enabled() {
-        let rocket_sentry = RocketSentry::fairing();
+        let rocket_sentry = RocketSentry::builder().build();
 
         rocket_sentry.init("https://user@some.dsn/123", 0.);
 
@@ -382,7 +382,7 @@ mod tests {
 
     #[rocket::async_test]
     async fn transactions_enabled_by_traces_sample_rate() {
-        let rocket_sentry = RocketSentry::fairing();
+        let rocket_sentry = RocketSentry::builder().build();
 
         rocket_sentry.init("https://user@some.dsn/123", 0.01);
 
