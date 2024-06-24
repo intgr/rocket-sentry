@@ -67,7 +67,10 @@ sentry_dsn = "https://057006d7dfe5fff0fbed461cfca5f757@sentry.io/1111111"
 sentry_traces_sample_rate = 0.2  # 20% of requests will be logged under the performance tab
 ```
 
-`traces_sampler` can be used instead of `sentry_traces_sample_rate` to have a more granular control, [see details here](https://docs.sentry.io/platforms/rust/configuration/sampling/#configuring-the-transaction-sample-rate).
+### Performance Monitoring
+
+`traces_sampler` can be used instead of `sentry_traces_sample_rate` to have a more granular control over performance monitoring,
+[see Sentry documentation](https://docs.sentry.io/platforms/rust/configuration/sampling/#configuring-the-transaction-sample-rate).
 ```rust
 use rocket_sentry::RocketSentry;
 
@@ -75,7 +78,7 @@ use rocket_sentry::RocketSentry;
 fn rocket() -> _ {
     let traces_sampler = move |ctx: &TransactionContext| -> f32 {
         match ctx.name() {
-            path if matches!(path, "GET /specific/path/1" | "GET /specific/path/2") => 0.,  // Drop the performance transaction
+            "GET /specific/path/1" | "GET /specific/path/2" => 0.,  // Drop the performance transaction
             _ => 1.,
         }
     };

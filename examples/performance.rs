@@ -38,7 +38,7 @@ fn performance_skipped() -> String {
     return format!("Waited {duration:?}\nTransaction will be dropped");
 }
 
-#[get("/performance/rng")]
+#[get("/performance/random")]
 fn performance_rng() -> String {
     let duration = Duration::from_millis(100);
     thread::sleep(duration);
@@ -48,6 +48,7 @@ fn performance_rng() -> String {
 #[launch]
 fn rocket() -> Rocket<Build> {
     let rocket_instance = rocket::build();
+    // Get the default configured sample rate from `Rocket.toml`
     let default_rate = rocket_instance
         .figment()
         .extract_inner::<f32>("sentry_traces_sample_rate")

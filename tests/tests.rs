@@ -24,12 +24,15 @@ async fn fairing_init_with_specific_traces_sampler() {
     assert!(hub.client().is_none());
 
     let traces_sampler = move |ctx: &TransactionContext| -> f32 {
-        if matches!(ctx.name(), "GET /specific/path/1" | "GET /specific/path/2") {
-            log::debug!("Dropping performance transaction");
-            0.
-        } else {
-            log::debug!("Sending performance transaction 80% of the time");
-            0.8
+        match ctx.name() {
+            "GET /specific/path/1" | "GET /specific/path/2" => {
+                log::debug!("Dropping performance transaction");
+                0.
+            }
+            _ => {
+                log::debug!("Sending performance transaction 80% of the time");
+                0.8
+            }
         }
     };
     let rocket_sentry = RocketSentry::builder()
