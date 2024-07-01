@@ -75,7 +75,7 @@ impl RocketSentry {
 
     #[must_use]
     pub fn builder() -> RocketSentryBuilder {
-        RocketSentryBuilder::default()
+        RocketSentryBuilder::new()
     }
 
     fn init(&self, dsn: &str, traces_sample_rate: f32) {
@@ -217,14 +217,13 @@ fn request_to_header_map(request: &Request) -> BTreeMap<String, String> {
         .collect()
 }
 
-#[derive(Default)]
 pub struct RocketSentryBuilder {
     traces_sampler: Option<Arc<TracesSampler>>,
 }
 
 impl RocketSentryBuilder {
     #[must_use]
-    pub fn new() -> RocketSentryBuilder {
+    fn new() -> RocketSentryBuilder {
         RocketSentryBuilder {
             traces_sampler: None,
         }
