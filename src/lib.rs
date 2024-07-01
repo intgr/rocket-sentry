@@ -78,12 +78,6 @@ impl RocketSentry {
         RocketSentryBuilder::default()
     }
 
-    #[must_use]
-    pub fn set_traces_sampler(mut self, traces_sampler: Arc<TracesSampler>) -> Self {
-        self.traces_sampler = Some(traces_sampler);
-        self
-    }
-
     fn init(&self, dsn: &str, traces_sample_rate: f32) {
         let guard = sentry::init((
             dsn,

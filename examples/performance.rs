@@ -54,15 +54,19 @@ fn rocket() -> Rocket<Build> {
         .extract_inner::<f32>("sentry_traces_sample_rate")
         .unwrap();
     let traces_sampler = move |ctx: &TransactionContext| -> f32 {
-        if ctx.name().to_lowercase().contains("skip") {
-            log::warn!("Dropping performance transaction");
-            0.
-        } else if ctx.name().to_lowercase().contains("rng") {
-            log::warn!("Sending performance transaction half the time");
-            0.5
-        } else {
-            log::warn!("Sending performance transaction using default rate");
-            default_rate
+        match ctx.name() {
+            "GET /performance/skip" => {
+                log::warn!("Dropping performance transaction");
+                0.
+            }
+            "GET /performance/random" => {
+                log::warn!("Sending performance transaction half the time");
+                0.
+            }
+            _ => {
+                log::warn!("Sending performance transaction using default rate");
+                default_rate
+            }
         }
     };
     let rocket_sentry = RocketSentry::builder()
