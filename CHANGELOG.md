@@ -7,9 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.18.0] - 2024-07-02
 
-- **Feature:** Performance Monitoring traces sampler callback ([#74](https://github.com/intgr/rocket-sentry/pull/74))
-- **CI:** Fix clippy checks in CI ([#72](https://github.com/intgr/rocket-sentry/pull/72))
+- **Feature:** Add Performance Monitoring traces sampler callback to customize transaction reporting ([#74](https://github.com/intgr/rocket-sentry/pull/74))
 - **Feature:** Add `#[must_use]` to RocketSentry::fairing() ([#69](https://github.com/intgr/rocket-sentry/pull/69))
+- **Dependency:** Update rust crate sentry to 0.34.0 ([#76](https://github.com/intgr/rocket-sentry/pull/76))
 
 ## [0.17.0] - 2023-11-28
 
