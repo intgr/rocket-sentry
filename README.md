@@ -23,7 +23,7 @@ Currently `rocket-sentry` includes two integrations:
 
 * **Rust panic handler:** when a panic happens, it is reported as a Sentry event.
 * **Performance Monitoring:** HTTP requests are reported as [Transactions](https://docs.sentry.io/product/performance/transaction-summary/),
-  if the `sentry_traces_sample_rate` setting is configured.
+  if the `sentry_traces_sample_rate` setting is configured or `traces_sampler` callback is provided (see example below).
 
   Transactions currently include the following fields:
   - [X] HTTP method
@@ -66,6 +66,27 @@ sentry_dsn = ""  # Disabled
 sentry_dsn = "https://057006d7dfe5fff0fbed461cfca5f757@sentry.io/1111111"
 sentry_traces_sample_rate = 0.2  # 20% of requests will be logged under the performance tab
 ```
+
+### Performance Monitoring
+
+`traces_sampler` can be used instead of `sentry_traces_sample_rate` to have a more granular control over performance monitoring,
+[see Sentry documentation](https://docs.sentry.io/platforms/rust/configuration/sampling/#configuring-the-transaction-sample-rate).
+```rust
+use rocket_sentry::RocketSentry;
+
+#[launch]
+fn rocket() -> _ {
+    let traces_sampler = move |ctx: &TransactionContext| -> f32 {
+        match ctx.name() {
+            "GET /specific/path/1" | "GET /specific/path/2" => 0.,  // Drop the performance transaction
+            _ => 1.,
+        }
+    };
+    rocket::build()
+        .attach(RocketSentry::builder().traces_sampler(Arc::new(traces_sampler)).build());
+}
+```
+See [a more advanced example](examples/performance.rs).
 
 Testing
 -------
