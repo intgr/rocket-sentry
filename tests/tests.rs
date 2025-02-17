@@ -1,8 +1,10 @@
-use sentry::{Hub, TransactionContext};
-use std::sync::Arc;
 use figment::Figment;
 use rocket::Config;
 use rocket_sentry::RocketSentry;
+use sentry::{Hub, TransactionContext};
+use std::sync::Arc;
+
+const SENTRY_DSN_CONFIG: (&str, &str) = ("sentry_dsn", "https://123@sentry.io/456");
 
 /// Smoke test: check that sentry gets initialized by the fairing.
 #[rocket::async_test]
@@ -50,23 +52,8 @@ async fn fairing_init_with_specific_traces_sampler() {
 }
 
 #[rocket::async_test]
-async fn fairing_init_with_default_environment() {
-    let _rocket = rocket::build()
-        .attach(RocketSentry::fairing())
-        .ignite()
-        .await
-        .expect("Rocket failed to ignite");
-    let client = Hub::current().client().unwrap();
-    let client_options = client.options();
-    let environment = client_options.environment.clone().unwrap().to_string();
-
-    assert_eq!(environment, "development");  // default to development for debug build
-}
-
-#[rocket::async_test]
-async fn fairing_init_with_release_environment() {
-    let figment = Figment::from(Config::release_default())
-        .join(("sentry_dsn", "https://123@sentry.io/456"));
+async fn fairing_init_with_debug_rocket_profile() {
+    let figment = Figment::from(Config::debug_default()).join(SENTRY_DSN_CONFIG);
     let _rocket = rocket::custom(figment)
         .attach(RocketSentry::fairing())
         .ignite()
@@ -76,16 +63,31 @@ async fn fairing_init_with_release_environment() {
     let client_options = client.options();
     let environment = client_options.environment.clone().unwrap().to_string();
 
-    assert_eq!(environment, "production");  // default to production for release build
+    assert_eq!(environment, "development"); // default to development for debug build
 }
 
 #[rocket::async_test]
-async fn fairing_init_with_custom_environment() {
+async fn fairing_init_with_release_rocket_profile() {
+    let figment = Figment::from(Config::release_default()).join(SENTRY_DSN_CONFIG);
+    let _rocket = rocket::custom(figment)
+        .attach(RocketSentry::fairing())
+        .ignite()
+        .await
+        .expect("Rocket failed to ignite");
+    let client = Hub::current().client().unwrap();
+    let client_options = client.options();
+    let environment = client_options.environment.clone().unwrap().to_string();
+
+    assert_eq!(environment, "production"); // default to production for release build
+}
+
+#[rocket::async_test]
+async fn fairing_init_with_custom_rocket_profile() {
     let profile_name = "staging";
-    let figment = Figment::new().select(profile_name)
+    let figment = Figment::new()
+        .select(profile_name)
         .join(Config::debug_default())
-        .join(("sentry_dsn", "https://123@sentry.io/456"));
-
+        .join(SENTRY_DSN_CONFIG);
 
     let _rocket = rocket::custom(figment)
         .attach(RocketSentry::fairing())
@@ -96,5 +98,5 @@ async fn fairing_init_with_custom_environment() {
     let client_options = client.options();
     let environment = client_options.environment.clone().unwrap().to_string();
 
-    assert_eq!(environment, profile_name);  // Rocket profile name was passed to Sentry config
+    assert_eq!(environment, profile_name); // Rocket profile name was passed to Sentry config
 }

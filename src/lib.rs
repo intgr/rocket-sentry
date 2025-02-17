@@ -270,7 +270,6 @@ mod tests {
 
     const DEFAULT_ENV: &'static str = "TEST";
 
-
     #[rocket::async_test]
     async fn request_to_sentry_transaction_name_get_no_path() {
         let rocket = rocket::build();
