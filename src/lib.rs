@@ -41,6 +41,7 @@
 #[macro_use]
 extern crate log;
 
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
@@ -78,7 +79,7 @@ impl RocketSentry {
         RocketSentryBuilder::new()
     }
 
-    fn init(&self, dsn: &str, traces_sample_rate: f32) {
+    fn init(&self, dsn: &str, traces_sample_rate: f32, environment: &'static str) {
         let guard = sentry::init((
             dsn,
             ClientOptions {
@@ -88,6 +89,7 @@ impl RocketSentry {
                 })),
                 traces_sample_rate,
                 traces_sampler: self.traces_sampler.clone(),
+                environment: Some(Cow::from(environment)),
                 ..Default::default()
             },
         ));
@@ -130,6 +132,14 @@ impl Fairing for RocketSentry {
 
     async fn on_ignite(&self, rocket: Rocket<Build>) -> fairing::Result {
         let figment = rocket.figment();
+        let profile_name = figment.profile().to_string();
+
+        // Set Sentry's environment based on Rocket profile
+        let environment: &'static str = match profile_name {
+            debug if debug == "debug" => "development",
+            release if release == "release" => "production",
+            other => other.leak(),
+        };
 
         let config: figment::error::Result<Config> = figment.extract();
         match config {
@@ -138,7 +148,7 @@ impl Fairing for RocketSentry {
                     info!("Sentry disabled.");
                 } else {
                     let traces_sample_rate = config.sentry_traces_sample_rate.unwrap_or(0f32);
-                    self.init(&config.sentry_dsn, traces_sample_rate);
+                    self.init(&config.sentry_dsn, traces_sample_rate, environment);
                 }
             }
             Err(err) => error!("Sentry not configured: {}", err),
@@ -258,6 +268,9 @@ mod tests {
         request_to_header_map, request_to_query_string, request_to_transaction_name, RocketSentry,
     };
 
+    const DEFAULT_ENV: &'static str = "TEST";
+
+
     #[rocket::async_test]
     async fn request_to_sentry_transaction_name_get_no_path() {
         let rocket = rocket::build();
@@ -365,7 +378,7 @@ mod tests {
     async fn transactions_not_enabled() {
         let rocket_sentry = RocketSentry::builder().build();
 
-        rocket_sentry.init("https://user@some.dsn/123", 0.);
+        rocket_sentry.init("https://user@some.dsn/123", 0., DEFAULT_ENV);
 
         assert_eq!(
             rocket_sentry.transactions_enabled.load(Ordering::Relaxed),
@@ -377,7 +390,7 @@ mod tests {
     async fn transactions_enabled_by_traces_sample_rate() {
         let rocket_sentry = RocketSentry::builder().build();
 
-        rocket_sentry.init("https://user@some.dsn/123", 0.01);
+        rocket_sentry.init("https://user@some.dsn/123", 0.01, DEFAULT_ENV);
 
         assert_eq!(
             rocket_sentry.transactions_enabled.load(Ordering::Relaxed),
@@ -393,7 +406,7 @@ mod tests {
             }))
             .build();
 
-        rocket_sentry.init("https://user@some.dsn/123", 0.);
+        rocket_sentry.init("https://user@some.dsn/123", 0., DEFAULT_ENV);
 
         assert_eq!(
             rocket_sentry.transactions_enabled.load(Ordering::Relaxed),
