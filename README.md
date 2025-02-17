@@ -29,9 +29,9 @@ Currently `rocket-sentry` includes two integrations:
   - [X] HTTP method
   - [X] GET query string
   - [X] headers
+  - [X] environment
   - [ ] POST data
   - [ ] cookies
-  - [ ] environment
   - [ ] URL
 
 Pull requests welcome!
