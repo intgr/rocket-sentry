@@ -79,7 +79,7 @@ impl RocketSentry {
         RocketSentryBuilder::new()
     }
 
-    fn init(&self, dsn: &str, traces_sample_rate: f32, environment: &'static str) {
+    fn init(&self, dsn: &str, traces_sample_rate: f32, environment: Cow<'static, str>) {
         let guard = sentry::init((
             dsn,
             ClientOptions {
@@ -89,7 +89,7 @@ impl RocketSentry {
                 })),
                 traces_sample_rate,
                 traces_sampler: self.traces_sampler.clone(),
-                environment: Some(Cow::from(environment)),
+                environment: Some(environment),
                 ..Default::default()
             },
         ));
@@ -135,10 +135,10 @@ impl Fairing for RocketSentry {
         let profile_name = figment.profile().to_string();
 
         // Set Sentry's environment based on Rocket profile
-        let environment: &'static str = match profile_name {
-            debug if debug == "debug" => "development",
-            release if release == "release" => "production",
-            other => other.leak(),
+        let environment = match profile_name.as_str() {
+            "debug" => Cow::Borrowed("development"),
+            "release" => Cow::Borrowed("production"),
+            _ => Cow::Owned(profile_name),
         };
 
         let config: figment::error::Result<Config> = figment.extract();
@@ -257,6 +257,7 @@ impl RocketSentryBuilder {
 
 #[cfg(test)]
 mod tests {
+    use std::borrow::Cow;
     use rocket::http::ContentType;
     use rocket::http::Header;
     use rocket::local::asynchronous::Client;
@@ -268,7 +269,7 @@ mod tests {
         request_to_header_map, request_to_query_string, request_to_transaction_name, RocketSentry,
     };
 
-    const DEFAULT_ENV: &'static str = "TEST";
+    const DEFAULT_ENV: Cow<'static, str> = Cow::Borrowed("TEST");
 
     #[rocket::async_test]
     async fn request_to_sentry_transaction_name_get_no_path() {
