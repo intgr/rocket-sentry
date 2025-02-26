@@ -257,11 +257,11 @@ impl RocketSentryBuilder {
 
 #[cfg(test)]
 mod tests {
-    use std::borrow::Cow;
     use rocket::http::ContentType;
     use rocket::http::Header;
     use rocket::local::asynchronous::Client;
     use sentry::TransactionContext;
+    use std::borrow::Cow;
     use std::sync::atomic::Ordering;
     use std::sync::Arc;
 
