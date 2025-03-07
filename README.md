@@ -29,7 +29,7 @@ Currently `rocket-sentry` includes two integrations:
   - [X] HTTP method
   - [X] GET query string
   - [X] headers
-  - [X] environment
+  - [X] environment name (based on Rocket configuration profile)
   - [ ] POST data
   - [ ] cookies
   - [ ] URL
