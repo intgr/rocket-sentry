@@ -24,7 +24,6 @@ async fn fairing_init() {
 #[rocket::async_test]
 async fn fairing_init_with_specific_traces_sampler() {
     let hub = Hub::current();
-    assert!(hub.client().is_none());
 
     let traces_sampler = move |ctx: &TransactionContext| -> f32 {
         match ctx.name() {
@@ -48,7 +47,8 @@ async fn fairing_init_with_specific_traces_sampler() {
         .await
         .expect("Rocket failed to ignite");
 
-    assert!(hub.client().is_some());
+    let sentry_client = hub.client().unwrap();
+    assert!(sentry_client.options().traces_sampler.is_some());
 }
 
 async fn init_rocket_using_figment(figment: Figment) {
