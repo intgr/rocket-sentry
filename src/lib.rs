@@ -51,7 +51,7 @@ use std::sync::{Arc, Mutex};
 
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::Status;
-use rocket::request::local_cache_once;
+use rocket::request::{local_cache_once, FromRequest, Outcome};
 use rocket::serde::Deserialize;
 use rocket::{fairing, Build, Data, Request, Response, Rocket};
 use sentry::protocol::SpanStatus;
@@ -115,13 +115,6 @@ impl RocketSentry {
         let transaction_context = sentry::TransactionContext::new(name, TRANSACTION_OPERATION_NAME);
         sentry::start_transaction(transaction_context)
     }
-
-    /// Same type as the underlying function so as to retrieve a transaction from the cache.
-    /// Should not be called but won't panic either.
-    fn invalid_transaction() -> Transaction {
-        let name = "INVALID TRANSACTION";
-        Self::start_transaction(name)
-    }
 }
 
 #[rocket::async_trait]
@@ -162,7 +155,7 @@ impl Fairing for RocketSentry {
     async fn on_request(&self, request: &mut Request<'_>, _: &mut Data<'_>) {
         if self.transactions_enabled.load(Ordering::Relaxed) {
             let name = request_to_transaction_name(request);
-            let build_transaction = move || Self::start_transaction(&name);
+            let build_transaction = move || Some(Self::start_transaction(&name));
             let request_transaction = local_cache_once!(request, build_transaction);
             request.local_cache(request_transaction);
         }
@@ -171,13 +164,23 @@ impl Fairing for RocketSentry {
     async fn on_response<'r>(&self, request: &'r Request<'_>, response: &mut Response<'r>) {
         if self.transactions_enabled.load(Ordering::Relaxed) {
             // We take the transaction set in the on_request callback
-            let request_transaction = local_cache_once!(request, Self::invalid_transaction);
-            let ongoing_transaction: &Transaction = request.local_cache(request_transaction);
-            ongoing_transaction.set_status(map_status(response.status()));
-            set_transaction_request(ongoing_transaction, request);
-            ongoing_transaction.clone().finish();
+            if let Some(ongoing_transaction) = get_current_transaction(request) {
+                ongoing_transaction.set_status(map_status(response.status()));
+                set_transaction_request(ongoing_transaction, request);
+                ongoing_transaction.clone().finish();
+            }
         }
     }
+}
+
+pub fn get_current_transaction<'r>(request: &'r Request) -> &'r Option<Transaction> {
+    fn empty_transaction() -> Option<Transaction> {
+        None
+    }
+
+    let request_transaction = local_cache_once!(request, empty_transaction);
+    let ongoing_transaction = request.local_cache(request_transaction);
+    ongoing_transaction
 }
 
 fn set_transaction_request(transaction: &Transaction, request: &Request) {
@@ -255,6 +258,22 @@ impl RocketSentryBuilder {
             transactions_enabled: AtomicBool::new(false),
             traces_sampler: self.traces_sampler,
         }
+    }
+}
+
+pub struct SentryGuard<'r> {
+    pub current_transaction: &'r Option<Transaction>,
+}
+
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for SentryGuard<'r> {
+    type Error = ();
+
+    async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+        let transaction = get_current_transaction(req);
+        Outcome::Success(SentryGuard {
+            current_transaction: transaction,
+        })
     }
 }
 
