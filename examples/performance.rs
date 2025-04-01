@@ -13,7 +13,7 @@ use rocket_sentry::RocketSentry;
 fn performance() -> String {
     let duration = Duration::from_millis(500);
     thread::sleep(duration);
-    return format!("Waited {duration:?}");
+    format!("Waited {duration:?}")
 }
 
 #[get("/performance/<id>")]
@@ -21,28 +21,28 @@ fn performance_with_id(id: u16) -> String {
     // Wait as long as the id in seconds
     let duration = Duration::from_secs(id.into());
     thread::sleep(duration);
-    return format!("Waited {duration:?} for id {id}");
+    format!("Waited {duration:?} for id {id}")
 }
 
 #[get("/performance?<param1>&<param2>")]
 fn performance_with_parameter(param1: String, param2: u32) -> String {
     let duration = Duration::from_millis(250);
     thread::sleep(duration);
-    return format!("Waited {duration:?} for param {param1} - {param2}");
+    format!("Waited {duration:?} for param {param1} - {param2}")
 }
 
 #[get("/performance/skip")]
 fn performance_skipped() -> String {
     let duration = Duration::from_millis(100);
     thread::sleep(duration);
-    return format!("Waited {duration:?}\nTransaction will be dropped");
+    format!("Waited {duration:?}\nTransaction will be dropped")
 }
 
 #[get("/performance/random")]
 fn performance_rng() -> String {
     let duration = Duration::from_millis(100);
     thread::sleep(duration);
-    return format!("Waited {duration:?}\nTransaction MIGHT be dropped");
+    format!("Waited {duration:?}\nTransaction MIGHT be dropped")
 }
 
 #[launch]
