@@ -1,6 +1,7 @@
 {
   "extends": [
-    "config:base"
+    "config:recommended",
+    ":semanticCommits"
   ],
   "packageRules": [
     {
@@ -8,6 +9,12 @@
       "matchUpdateTypes": ["patch"],
       "groupName": "Cargo patch",
       "schedule": ["before 5am on saturday"]
+    },
+    {
+      "matchManagers": ["cargo"],
+      "matchPackageNames": ["sentry"],
+      "matchUpdateTypes": ["major", "minor"],
+      "semanticCommitType": "feat"
     }
   ]
 }
