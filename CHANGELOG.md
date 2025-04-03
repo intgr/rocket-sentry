@@ -7,13 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.19.0] - 2025-04-03
 
-- **CI:** Configure release-plz version bump ([#83](https://github.com/intgr/rocket-sentry/pull/83))
-- **CI:** Improve release-plz changelog & Renovate configuration ([#82](https://github.com/intgr/rocket-sentry/pull/82))
-- **Dependency:** Update rust crate sentry to 0.37.0 ([#77](https://github.com/intgr/rocket-sentry/pull/77))
 - **Feature:** Pass environment name to Sentry ([#80](https://github.com/intgr/rocket-sentry/pull/80))
 
   Contributed by **Hugo-C**
-- **Documentation:** Fix CI status badge ([#78](https://github.com/intgr/rocket-sentry/pull/78))
+- **Dependency:** Update rust crate sentry to 0.37.0 ([#77](https://github.com/intgr/rocket-sentry/pull/77))
 
 ## [0.18.0] - 2024-07-02
 
