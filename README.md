@@ -3,8 +3,8 @@ Rocket Sentry
 
 [![Crates.io version](https://img.shields.io/crates/v/rocket-sentry.svg)](https://crates.io/crates/rocket-sentry)
 [![Documentation](https://docs.rs/rocket-sentry/badge.svg)](https://docs.rs/rocket-sentry/)
-[![Tests status](https://github.com/intgr/rocket-sentry/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/intgr/rocket-sentry/actions/workflows/tests.yml)
-[![Changelog](https://img.shields.io/badge/Changelog-f15d30.svg)](https://github.com/intgr/rocket-sentry/blob/master/CHANGELOG.md)
+[![Tests status](https://github.com/intgr/rocket-sentry/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/intgr/rocket-sentry/actions/workflows/tests.yml)
+[![Changelog](https://img.shields.io/badge/Changelog-f15d30.svg)](https://github.com/intgr/rocket-sentry/blob/main/CHANGELOG.md)
 
 `rocket-sentry` is a simple add-on for the **Rocket** web framework to simplify
 integration with the **Sentry** application monitoring system.
