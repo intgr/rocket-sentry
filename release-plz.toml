@@ -4,5 +4,6 @@ changelog_config = "cliff.toml"
 changelog_update = true
 git_tag_enable = true
 git_release_enable = true
+features_always_increment_minor = true
 pr_labels = ["release"]
 semver_check = true
