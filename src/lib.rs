@@ -1,4 +1,7 @@
 #![warn(clippy::pedantic)]
+#![warn(clippy::cargo)]
+#![allow(clippy::multiple_crate_versions)]
+
 //! **rocket-sentry** is a simple add-on for the **Rocket** web framework to simplify
 //! integration with the **Sentry** application monitoring system.
 //!
@@ -151,7 +154,7 @@ impl Fairing for RocketSentry {
                     self.init(&config.sentry_dsn, traces_sample_rate, environment);
                 }
             }
-            Err(err) => error!("Sentry not configured: {}", err),
+            Err(err) => error!("Sentry not configured: {err}"),
         }
         Ok(rocket)
     }
@@ -380,10 +383,7 @@ mod tests {
 
         rocket_sentry.init("https://user@some.dsn/123", 0., DEFAULT_ENV);
 
-        assert_eq!(
-            rocket_sentry.transactions_enabled.load(Ordering::Relaxed),
-            false
-        );
+        assert!(!rocket_sentry.transactions_enabled.load(Ordering::Relaxed));
     }
 
     #[rocket::async_test]
@@ -392,10 +392,7 @@ mod tests {
 
         rocket_sentry.init("https://user@some.dsn/123", 0.01, DEFAULT_ENV);
 
-        assert_eq!(
-            rocket_sentry.transactions_enabled.load(Ordering::Relaxed),
-            true
-        );
+        assert!(rocket_sentry.transactions_enabled.load(Ordering::Relaxed));
     }
 
     #[rocket::async_test]
@@ -408,9 +405,6 @@ mod tests {
 
         rocket_sentry.init("https://user@some.dsn/123", 0., DEFAULT_ENV);
 
-        assert_eq!(
-            rocket_sentry.transactions_enabled.load(Ordering::Relaxed),
-            true
-        );
+        assert!(rocket_sentry.transactions_enabled.load(Ordering::Relaxed));
     }
 }
