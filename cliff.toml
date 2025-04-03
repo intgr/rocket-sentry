@@ -11,15 +11,18 @@ commit_preprocessors = [
     # Pull request links in commit message
     { pattern = "\\(#([0-9]+)\\)", replace = "([#${1}](https://github.com/intgr/rocket-sentry/pull/${1}))"},
 ]
+# First match wins
 commit_parsers = [
-    { message = "^ci:", group = "CI" },
-    { message = "^feat:", group = "Feature" },
-    { message = "^docs:", group = "Documentation" },
-    { message = "^Update Rust crate", group = "Dependency" },
+    { message = "^feat\\(deps\\):", group = "Dependency" },
+    { message = "^ci", group = "CI" },
+    { message = "^feat", group = "Feature" },
+    { message = "^docs", group = "Documentation" },
     { message = "^Update .+ requirement", group = "Dependency" },
+    { message = "^chore", skip = true },
     { message = "^Merge branch", skip = true },
     { message = "^Update actions/", skip = true },
     { message = "^Prepare for .+ release", skip = true },
+    { message = ".", group = "" },
 ]
 
 [changelog]
