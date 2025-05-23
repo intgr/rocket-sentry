@@ -55,7 +55,7 @@ use rocket::request::local_cache_once;
 use rocket::serde::Deserialize;
 use rocket::{fairing, Build, Data, Request, Response, Rocket};
 use sentry::protocol::SpanStatus;
-use sentry::{protocol, ClientInitGuard, ClientOptions, TracesSampler, Transaction};
+use sentry::{protocol, ClientInitGuard, ClientOptions, Hub, TracesSampler, Transaction};
 
 const TRANSACTION_OPERATION_NAME: &str = "http.server";
 
@@ -113,7 +113,11 @@ impl RocketSentry {
 
     fn start_transaction(name: &str) -> Transaction {
         let transaction_context = sentry::TransactionContext::new(name, TRANSACTION_OPERATION_NAME);
-        sentry::start_transaction(transaction_context)
+        let transaction = sentry::start_transaction(transaction_context);
+        Hub::current().configure_scope(|scope| {
+            scope.set_span(Some(transaction.clone().into()));
+        });
+        transaction
     }
 
     /// Same type as the underlying function so as to retrieve a transaction from the cache.
