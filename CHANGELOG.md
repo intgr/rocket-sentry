@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is similar to [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.20.0] - 2025-05-26
+
+- **Dependency:** Update rust crate sentry to 0.38.0 ([#86](https://github.com/intgr/rocket-sentry/pull/86))
+
 ## [0.19.0] - 2025-04-03
 
 - **Feature:** Pass environment name to Sentry ([#80](https://github.com/intgr/rocket-sentry/pull/80))
