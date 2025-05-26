@@ -376,7 +376,7 @@ mod tests {
         );
     }
 
-    /// Transaction are only enabled on either a positive traces_sample_rate or a set traces_sampler
+    /// Transaction are only enabled on positive `traces_sample_rate` or a set `traces_sampler`
     #[rocket::async_test]
     async fn transactions_not_enabled() {
         let rocket_sentry = RocketSentry::builder().build();
