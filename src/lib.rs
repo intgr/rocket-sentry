@@ -44,10 +44,6 @@
 #[macro_use]
 extern crate log;
 
-use std::borrow::Cow;
-use std::collections::BTreeMap;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex};
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::Status;
 use rocket::request::{local_cache_once, FromRequest, Outcome};
@@ -55,6 +51,10 @@ use rocket::serde::Deserialize;
 use rocket::{fairing, Build, Data, Request, Response, Rocket};
 use sentry::protocol::SpanStatus;
 use sentry::{protocol, ClientInitGuard, ClientOptions, TracesSampler, Transaction};
+use std::borrow::Cow;
+use std::collections::BTreeMap;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
 
 const TRANSACTION_OPERATION_NAME: &str = "http.server";
 
