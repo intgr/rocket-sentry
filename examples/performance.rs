@@ -7,7 +7,7 @@ use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
-use rocket_sentry::RocketSentry;
+use rocket_sentry::{wrap_in_span, RocketSentry, SentryGuard};
 
 #[get("/performance")]
 fn performance() -> String {
@@ -45,6 +45,20 @@ fn performance_rng() -> String {
     format!("Waited {duration:?}\nTransaction MIGHT be dropped")
 }
 
+#[get("/performance/spans")]
+fn performance_with_customs_spans(sentry: SentryGuard) -> String {
+    wrap_in_span(&sentry, "db", "reading from db", || {
+        let duration = Duration::from_millis(150);
+        thread::sleep(duration);
+    });
+
+    wrap_in_span(&sentry, "db", "writing to db", || {
+        let duration = Duration::from_millis(350);
+        thread::sleep(duration);
+    });
+    "Created custom spans".to_string()
+}
+
 #[launch]
 fn rocket() -> Rocket<Build> {
     let rocket_instance = rocket::build();
@@ -80,6 +94,7 @@ fn rocket() -> Rocket<Build> {
             performance_with_parameter,
             performance_skipped,
             performance_rng,
+            performance_with_customs_spans,
         ],
     )
 }
