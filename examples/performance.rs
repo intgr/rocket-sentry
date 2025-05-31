@@ -51,12 +51,12 @@ fn performance_with_customs_spans(sentry: SentryGuard) -> String {
         let duration = Duration::from_millis(150);
         thread::sleep(duration);
     });
-    
+
     wrap_in_span(&sentry, "db", "writing to db", || {
         let duration = Duration::from_millis(350);
         thread::sleep(duration);
     });
-    format!("Created custom spans")
+    "Created custom spans".to_string()
 }
 
 #[launch]
