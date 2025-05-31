@@ -48,7 +48,6 @@ use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
-
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::Status;
 use rocket::request::{local_cache_once, FromRequest, Outcome};
@@ -275,6 +274,24 @@ impl<'r> FromRequest<'r> for SentryGuard<'r> {
             current_transaction: transaction,
         })
     }
+}
+
+/// Helper function to start a Sentry's Span and finish it automatically
+pub fn wrap_in_span<F, R>(guard: &SentryGuard, op: &str, description: &str, f: F) -> R
+where
+    F: FnOnce() -> R,
+{
+    let span = guard
+        .current_transaction
+        .as_ref()
+        .map(|span| span.start_child(op, description));
+
+    let result = f();
+
+    if let Some(span) = span {
+        span.finish();
+    }
+    result
 }
 
 #[cfg(test)]

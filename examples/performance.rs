@@ -7,7 +7,7 @@ use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
-use rocket_sentry::{RocketSentry, SentryGuard};
+use rocket_sentry::{wrap_in_span, RocketSentry, SentryGuard};
 
 #[get("/performance")]
 fn performance() -> String {
@@ -47,22 +47,16 @@ fn performance_rng() -> String {
 
 #[get("/performance/spans")]
 fn performance_with_customs_spans(sentry: SentryGuard) -> String {
-    let first_span = sentry
-        .current_transaction
-        .as_ref()
-        .map(|span| span.start_child("db", "reading from db"));
-    let duration = Duration::from_millis(100);
-    thread::sleep(duration);
-    first_span.map(|span| span.finish());
-
-    let second_span = sentry
-        .current_transaction
-        .as_ref()
-        .map(|span| span.start_child("db", "writing to db"));
-    let duration = Duration::from_millis(200);
-    thread::sleep(duration);
-    second_span.map(|span| span.finish());
-    return format!("Created custom spans");
+    wrap_in_span(&sentry, "db", "reading from db", || {
+        let duration = Duration::from_millis(150);
+        thread::sleep(duration);
+    });
+    
+    wrap_in_span(&sentry, "db", "writing to db", || {
+        let duration = Duration::from_millis(350);
+        thread::sleep(duration);
+    });
+    format!("Created custom spans")
 }
 
 #[launch]
