@@ -119,13 +119,6 @@ impl RocketSentry {
         });
         transaction
     }
-
-    /// Same type as the underlying function so as to retrieve a transaction from the cache.
-    /// Should not be called but won't panic either.
-    fn invalid_transaction() -> Transaction {
-        let name = "INVALID TRANSACTION";
-        Self::start_transaction(name)
-    }
 }
 
 #[rocket::async_trait]
@@ -166,7 +159,7 @@ impl Fairing for RocketSentry {
     async fn on_request(&self, request: &mut Request<'_>, _: &mut Data<'_>) {
         if self.transactions_enabled.load(Ordering::Relaxed) {
             let name = request_to_transaction_name(request);
-            let build_transaction = move || Self::start_transaction(&name);
+            let build_transaction = move || Some(Self::start_transaction(&name));
             let request_transaction = local_cache_once!(request, build_transaction);
             request.local_cache(request_transaction);
         }
@@ -175,13 +168,24 @@ impl Fairing for RocketSentry {
     async fn on_response<'r>(&self, request: &'r Request<'_>, response: &mut Response<'r>) {
         if self.transactions_enabled.load(Ordering::Relaxed) {
             // We take the transaction set in the on_request callback
-            let request_transaction = local_cache_once!(request, Self::invalid_transaction);
-            let ongoing_transaction: &Transaction = request.local_cache(request_transaction);
-            ongoing_transaction.set_status(map_status(response.status()));
-            set_transaction_request(ongoing_transaction, request);
-            ongoing_transaction.clone().finish();
+            if let Some(ongoing_transaction) = get_current_transaction(request) {
+                ongoing_transaction.set_status(map_status(response.status()));
+                set_transaction_request(ongoing_transaction, request);
+                ongoing_transaction.clone().finish();
+            }
         }
     }
+}
+
+fn get_current_transaction<'r>(request: &'r Request) -> Option<&'r Transaction> {
+    fn no_transaction() -> Option<Transaction> {
+        // mimic the function signature expected by the cache
+        None
+    }
+
+    let request_transaction = local_cache_once!(request, no_transaction);
+    let ongoing_transaction = request.local_cache(request_transaction);
+    ongoing_transaction.as_ref()
 }
 
 fn set_transaction_request(transaction: &Transaction, request: &Request) {
