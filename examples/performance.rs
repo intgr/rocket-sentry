@@ -2,12 +2,11 @@
 extern crate rocket;
 
 use rocket::{Build, Rocket};
-use sentry::TransactionContext;
+use rocket_sentry::RocketSentry;
+use sentry::{Hub, TransactionContext, TransactionOrSpan};
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
-
-use rocket_sentry::RocketSentry;
 
 #[get("/performance")]
 fn performance() -> String {
@@ -45,6 +44,30 @@ fn performance_rng() -> String {
     format!("Waited {duration:?}\nTransaction MIGHT be dropped")
 }
 
+#[get("/performance/multiple_spans")]
+fn performance_with_multiple_spans() -> String {
+    let duration = Duration::from_millis(150);
+    thread::sleep(duration);
+    let parent = Hub::current().configure_scope(|scope| scope.get_span());
+    let op_name = "some operation";
+    let child_1_name = "child 1";
+    let child_1: TransactionOrSpan = match parent {
+        Some(parent) => parent.start_child(op_name, child_1_name).into(),
+        None => {
+            let context = TransactionContext::new(child_1_name, op_name);
+            sentry::start_transaction(context).into()
+        }
+    };
+
+    thread::sleep(duration);
+    sentry::capture_message("some message", sentry::Level::Warning);
+    let child_2 = child_1.start_child(op_name, "child 2");
+    thread::sleep(duration);
+    child_2.finish();
+    child_1.finish();
+    "Waited some time with multiple spans".to_string()
+}
+
 #[launch]
 fn rocket() -> Rocket<Build> {
     let rocket_instance = rocket::build();
@@ -80,6 +103,7 @@ fn rocket() -> Rocket<Build> {
             performance_with_parameter,
             performance_skipped,
             performance_rng,
+            performance_with_multiple_spans,
         ],
     )
 }
