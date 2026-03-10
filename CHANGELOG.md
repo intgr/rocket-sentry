@@ -8,7 +8,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0] - 2026-03-10
 
 - **Dependency:** Update rust crate sentry to 0.47.0 ([#109](https://github.com/intgr/rocket-sentry/pull/109))
-- **Documentation:** Add missing changelog for 1.0.0 ([#108](https://github.com/intgr/rocket-sentry/pull/108))
 
 
 ## [1.0.0] - 2025-12-30
