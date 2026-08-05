@@ -11,9 +11,10 @@ RUN rustup component add rustfmt clippy
 # Build Cargo dependencies for cache
 COPY Cargo.toml ./
 RUN mkdir src/ && \
-	echo "pub fn main() {println!(\"dummy function\")}" > src/lib.rs && \
+	echo 'pub fn main() {println!("dummy function")}' > src/lib.rs && \
 	cargo build --lib --tests --examples --color=always && \
-	rm -rdv target/*/deps/rocket_sentry-* \
+	rm -rfv target/*/build/rocket-sentry \
+	        target/*/deps/rocket_sentry-* \
 	        target/*/.fingerprint/rocket-sentry-*
 
 # Do the actual build
