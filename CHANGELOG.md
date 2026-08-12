@@ -8,7 +8,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.3.0] - 2026-08-12
 
 - **Dependency:** Update rust crate sentry to 0.49.0 & migrate to new API ([#114](https://github.com/intgr/rocket-sentry/pull/114))
-- Adjust Dockerfile to new Cargo build-dir layout ([#117](https://github.com/intgr/rocket-sentry/pull/117))
 
 
 ## [1.2.0] - 2026-04-29
