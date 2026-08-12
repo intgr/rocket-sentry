@@ -1,7 +1,7 @@
 use figment::Figment;
 use rocket::Config;
 use rocket_sentry::RocketSentry;
-use sentry::{Hub, TransactionContext};
+use sentry::{Hub, TracesSamplingStrategy, TransactionContext};
 use std::sync::Arc;
 
 const SENTRY_DSN_CONFIG: (&str, &str) = ("sentry_dsn", "https://123@sentry.io/456");
@@ -48,7 +48,10 @@ async fn fairing_init_with_specific_traces_sampler() {
         .expect("Rocket failed to ignite");
 
     let sentry_client = hub.client().unwrap();
-    assert!(sentry_client.options().traces_sampler.is_some());
+    assert!(matches!(
+        sentry_client.options().traces_sampling_strategy,
+        TracesSamplingStrategy::Function(_)
+    ));
 }
 
 async fn init_rocket_using_figment(figment: Figment) {

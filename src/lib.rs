@@ -83,19 +83,20 @@ impl RocketSentry {
     }
 
     fn init(&self, dsn: &str, traces_sample_rate: f32, environment: Cow<'static, str>) {
-        let guard = sentry::init((
-            dsn,
-            ClientOptions {
-                before_send: Some(Arc::new(|event| {
-                    info!("Sending event to Sentry: {}", event.event_id);
-                    Some(event)
-                })),
-                traces_sample_rate,
-                traces_sampler: self.traces_sampler.clone(),
-                environment: Some(environment),
-                ..Default::default()
-            },
-        ));
+        let mut client_options = ClientOptions::new()
+            .before_send(|event| {
+                info!("Sending event to Sentry: {}", event.event_id);
+                Some(event)
+            })
+            .environment(environment);
+
+        if let Some(traces_sampler) = self.traces_sampler.as_ref().map(Arc::clone) {
+            client_options = client_options.traces_sampler(move |ctx| traces_sampler(ctx));
+        } else if traces_sample_rate > 0.0 {
+            client_options = client_options.traces_sample_rate(traces_sample_rate);
+        }
+
+        let guard = sentry::init((dsn, client_options));
 
         if guard.is_enabled() {
             // Tuck the ClientInitGuard in the fairing, so it lives as long as the server.
