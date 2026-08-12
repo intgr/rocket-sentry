@@ -92,7 +92,7 @@ impl RocketSentry {
 
         if let Some(traces_sampler) = self.traces_sampler.as_ref().map(Arc::clone) {
             client_options = client_options.traces_sampler(move |ctx| traces_sampler(ctx));
-        } else if traces_sample_rate > 0f32 {
+        } else if traces_sample_rate > 0.0 {
             client_options = client_options.traces_sample_rate(traces_sample_rate);
         }
 
